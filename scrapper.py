@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 from requests import get
 from pprint import pprint
 from datetime import datetime
+from database import *
 
 def get_bill_info(url):
 
@@ -14,32 +15,8 @@ def get_bill_info(url):
     store_insc_estadual = store.find_all("td")[2].text.strip()
     store_UF = store.find_all("td")[3].text.strip()
     
-    store_info = {
-        "nome":store_name,
-        "cnpj":store_cnpj,
-        "inscricao_estadual": store_insc_estadual,
-        "UF": store_UF
-    }
+    estabelecimento = criar_estabelecimento(store_name,store_cnpj, store_insc_estadual, store_UF)
 
-    ## products info
-    products = soup.find("table", class_="table table-striped")
-    for product in products.find_all("tr"):
-        product_name = product.find("h7").text.strip()
-        product_code = product.find("td").text.replace(product_name, "").strip().strip("(Código: ").strip(")")
-        product_qtt = float(product.find_all("td")[1].text.strip('Qtde total de ítens: '))
-        product_unidade = product.find_all("td")[2].text[4:]
-        product_valor_total = float(product.find_all("td")[3].text.strip("Valor total R$: R$ ").replace(",", "."))
-        
-
-        product_info = {
-            "nome": product_name,
-            "código":product_code,
-            "quantidade": product_qtt,
-            "unidade":product_unidade,
-            "valor total": product_valor_total
-        }
-
-        print(product_info)
 
     ## purchase info
     purchase_itens_qtd = int(soup.find_all('div', class_="col-lg-2")[0].text.strip())
@@ -49,13 +26,20 @@ def get_bill_info(url):
     purchase_date = datetime.strptime(p_date_str, "%d/%m/%Y %H:%M:%S")
     purchase_protocol = soup.find_all("table", class_="table-hover")[7].find("td").text
 
-    purchase_info = {
-        "total_de_itens": purchase_itens_qtd,
-        "preco": purchase_total_price,
-        "metodo_de_pagamento": purchase_payment_method,
-        "data":purchase_date,
-        "protocolo":purchase_protocol
-    }
+    compra = criar_compra(purchase_protocol, purchase_itens_qtd, purchase_total_price, purchase_payment_method, purchase_date, estabelecimento)
 
-    print(purchase_info)
+
+
+    ## products info
+    if compra:
+        products = soup.find("table", class_="table table-striped")
+        for product in products.find_all("tr"):
+            product_name = product.find("h7").text.strip()
+            product_code = product.find("td").text.replace(product_name, "").strip().strip("(Código: ").strip(")")
+            product_qtt = float(product.find_all("td")[1].text.strip('Qtde total de ítens: '))
+            product_unidade = product.find_all("td")[2].text[4:]
+            product_valor_total = float(product.find_all("td")[3].text.strip("Valor total R$: R$ ").replace(",", "."))
+            
+            produto = criar_produto(product_name, product_qtt, product_unidade, product_valor_total, compra, product_code)
+
 
