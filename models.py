@@ -13,7 +13,7 @@ class Estabelecimento(Model):
 
 class Compra(Model):
     protocolo = CharField()
-    total_itens = IntegerField()
+    total_itens = FloatField()
     preco = FloatField()
     pagamento = CharField()
     data_hora = DateTimeField()
@@ -21,6 +21,9 @@ class Compra(Model):
 
     class Meta:
         database = db
+    
+    def __repr__(self):
+        return self.protocolo
 
 class Produto(Model):
     nome = CharField()

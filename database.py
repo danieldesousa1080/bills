@@ -1,4 +1,6 @@
 from models import db, Estabelecimento, Produto, Compra
+from datetime import datetime
+from peewee import fn
 
 def criar_estabelecimento(nome, cnpj, inscricao, uf):
     try:
@@ -59,3 +61,17 @@ def procurar_estabelecimento(inscricao):
     if estabelecimento:
         return estabelecimento
 
+def compras_por_periodo(inicio, fim):
+    '''Retorna uma lista de comprasdado um tempo de início e fim.
+    formato do período: dd/mm/aaa'''
+    inicio = datetime.strptime(inicio, "%d/%m/%Y")
+    fim = datetime.strptime(fim, "%d/%m/%Y")
+    
+    return Compra.select().where(Compra.data_hora >= inicio | Compra.data_hora <= fim).order_by(Compra.data_hora)
+
+def valor_total_por_periodo(inicio, fim):
+    '''Soma o valor total de compras feitas dado um período
+    formato do período: dd/mm/aaaa'''
+    inicio = datetime.strptime(inicio, "%d/%m/%Y")
+    fim = datetime.strptime(fim, "%d/%m/%Y")
+    return Compra.select(fn.SUM(Compra.preco)).where(Compra.data_hora >= inicio, Compra.data_hora <= fim).scalar()

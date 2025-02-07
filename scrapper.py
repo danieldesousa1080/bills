@@ -19,7 +19,7 @@ def get_bill_info(url):
 
 
     ## purchase info
-    purchase_itens_qtd = int(soup.find_all('div', class_="col-lg-2")[0].text.strip())
+    purchase_itens_qtd = float(soup.find_all('div', class_="col-lg-2")[0].text.strip().replace(",","."))
     purchase_total_price = float(soup.find_all('div', class_="col-lg-2")[1].text)
     purchase_payment_method = soup.find("div", {"id": "formPrincipal:j_idt74:0:j_idt82"}).text
     p_date_str = soup.find_all("table", class_="table-hover")[5].find_all("td")[3].text
