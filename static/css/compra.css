@@ -1,0 +1,11 @@
+.produtos-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.produto-container {
+    padding: 4px;
+    background-color: lightgreen;
+    border: 1px solid green;
+}

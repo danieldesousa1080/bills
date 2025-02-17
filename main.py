@@ -33,15 +33,8 @@ def ler_qrcode_camera():
             tipo = qr_code.type
             
             # Imprime as informações no terminal
-            print(dados)
-            try:
-                get_bill_info(str(dados))
-                camera.release()
-                cv2.destroyAllWindows()
-                exit()
-            except Exception as e:
-                print("OCORREU UM ERRO", e)
-            
+            get_bill_info(str(dados))
+            exit()
 
             # Desenha um retângulo ao redor do QR Code na imagem
             pontos = qr_code.polygon

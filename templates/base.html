@@ -1,0 +1,25 @@
+<!doctype html>
+<head>
+<title>Sistema de controle financeiro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="{{ url_for('static', filename='base.css') }}">
+{% block head %}{% endblock %}
+</head>
+<body>
+    <header>
+        <div class="links">
+            <a href="{{url_for('procurar_produtos')}}">Procurar produtos</a>
+            <a href="{{url_for('mostrar_compras')}}">Todas as compras</a>
+        </div>
+        <div class="user">
+            Bem vindo {{ context["usuario"] }}!!
+            <a href="{{ url_for('logoff') }}">
+                <button>deslogar</button>
+            </a>
+        </div>
+    </header>
+    <h2>{% block content_title %}{% endblock %}</h2>
+    <div>
+        {% block content %}{% endblock %}
+    </div>
+</body>

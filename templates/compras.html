@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content_title %}Lista de Compras{% endblock %}
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/compras.css') }}">
+{% endblock %}
+{% block content %}
+    <h3>Filtrar compras por período</h3>
+    <form action="{{ url_for('mostrar_compras') }}">
+        {{ context["form"].inicio(class="formulario") }}
+        {{ context["form"].fim(class="formulario") }}
+        <button type="submit">Filtrar</button>
+    </form>
+
+    <button>Gerar relatório do período</button>
+
+    <h1>Total do período: R$ {{'%0.2f'|format(context["valor_periodo"])|float}}</h1>
+    <div class="compras-lista">
+       {% for compra in context["compras"] %}
+       <a href="{{ url_for('mostrar_compra', protocolo=compra['protocolo']) }}">
+        <div class="compras-container" title="valor: R${{ compra['preco'] }}">
+            <p><b>Protocolo:</b> {{compra["protocolo"]}}</p>
+            <p><b>Preço:</b> R${{compra["preco"]}}</p>
+            <p><b>Estabelecimento:</b> {{compra["estabelecimento"]["nome"]}}</p>
+            <p><b>Data:</b> {{compra["data"]}}</p>
+            <p><b>Total de itens:</b> {{compra["total_itens"]}}</p>
+        </div>
+       </a>
+       <hr>
+       {% endfor %}
+    </div>
+{% endblock %}

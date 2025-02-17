@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content_title %}Detalhes dessa empresa{% endblock %}
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/empresa.css') }}">
+{% endblock %}
+{% block content %}
+
+
+<p><b>Nome Real: </b>{{ context["empresa"]["nome_real"] }}</p>
+<p><b>Endereço: </b>{{ context["empresa"]["endereco"] }}</p>
+<p><b>Apelido: </b>{{ context["empresa"]["apelido"] }}</p>
+<p><b>Total de produtos comprados: {{ context["empresa"]["total_produtos"] }}</b></p>
+<p><b>Média de preço por produto: </b>{{ '%0.2f'|format(context["empresa"]["preco_por_produto"])|float }}</p>
+
+<h3>Definir um apelido para a empresa:</h3>
+    <form action="{{ url_for('informacoes_empresa', id=context['empresa']['id'])}}" method="post" class="formulario">
+        {{ context['form'].apelido(class="apelido-input") }}
+        <button type="submit">Definir</button>
+    </form>
+
+<p>Alterar o apelido da empresa fará com que ela apareça com esse nome em todas as outras telas</p>
+
+{% endblock %}

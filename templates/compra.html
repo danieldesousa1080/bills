@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content_title %}Detalhes da compra{% endblock %}
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/compra.css') }}">
+{% endblock %}
+{% block content %}
+    <a href="{{ url_for('informacoes_empresa', id=context['compra']['estabelecimento']['id']) }}"><h1>{{ context["compra"]["estabelecimento"]["nome"] }}</h1></a>
+    <p><b>{{ context["compra"]["estabelecimento"]["endereco"] }}</b></p>
+    <p><b>Total:</b> R$ {{ context["compra"]["preco"] }}</p>
+    <p><b>Preço médio por produto: </b>R$ {{ '%0.2f'|format(context["compra"]["preco_por_produto"])|float }}</p>
+    <p><b>Data:</b> {{ context["compra"]["data"] }}</p>
+    <br>
+    <p><b>Itens:</b> {{ context["compra"]["total_itens"] }}</p>
+    <div class="produtos-lista">
+        {% for produto in context["produtos"] %}
+            <div class="produto-container">
+                <p><b>{{ produto["nome"] }}</b></p>
+                <p><b>Preço:</b> R$ {{produto["preco"]}}</p>
+                <p><b>Preço Real: </b>R$ {{ '%0.2f'|format(produto["preco_real"])|float }} / {{ produto["unidade"] }}</p>
+                <p><b>Quantidade: </b> {{ produto["quantidade"] }} {{ produto["unidade"] }}</p>
+            </div>    
+        {% endfor %}
+    </div>
+{% endblock %}
