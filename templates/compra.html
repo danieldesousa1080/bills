@@ -10,6 +10,14 @@
     <p><b>Total:</b> R$ {{ context["compra"]["preco"] }}</p>
     <p><b>Preço médio por produto: </b>R$ {{ '%0.2f'|format(context["compra"]["preco_por_produto"])|float }}</p>
     <p><b>Data:</b> {{ context["compra"]["data"] }}</p>
+    {% if not context["compra"]["pagador"] %}
+    <a href="{{ url_for('pagar_compra', id=context['compra']['id']) }}"><button>Eu paguei por isso!</button></a>
+    {% elif context["compra"]["pagador"] == context["usuario"] %}
+    <p>Você registrou o pagamento dessa compra</p>
+    <a href="{{ url_for('remover_pgto_compra', id=context['compra']['id']) }}"><button>Remover pagamento</button></a>
+    {% else %}
+    <p><b>Pagador: </b> {{ context["compra"]["pagador"] }}</p>
+    {% endif %}
     <br>
     <p><b>Itens:</b> {{ context["compra"]["total_itens"] }}</p>
     <div class="produtos-lista">

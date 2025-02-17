@@ -1,10 +1,9 @@
-<h1>Olá! Para continuar, faça login!</h1>
+<h1>Registrar-se no sistema</h1>
  
 <div class="login-container">
-    <form action="{{ url_for('login') }}" method="post">
+    <form action="{{ url_for('registro') }}" method="post">
         {{ context["form"].usuario(class="formulario", placeholder="Insira seu usuario") }}
         {{ context["form"].senha(class="formulario", placeholder="Insira a senha") }}
-        <button type="submit">Fazer login</button>
+        <button type="submit">Registrar</button>
     </form>
-    <a href="{{ url_for('registro') }}">Registrar-se no sistema</a>
 </div>

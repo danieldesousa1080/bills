@@ -1,5 +1,5 @@
 from flask import Flask, request
-from flask import render_template, make_response, redirect, session
+from flask import render_template, make_response, redirect, session, url_for
 from datetime import date, datetime
 from wtforms import Form, DateField, StringField, PasswordField
 
@@ -37,18 +37,23 @@ CORS(app)
 @app.before_request
 def validar_identidade():
     token = request.cookies.get("user_token")
-    usuario = encontrar_usuario_pelo_token(token)
-    if (request.endpoint != "login") ^ bool(usuario):
-        return redirect("/login")
+    usuario = encontrar_usuario_pelo_token(token)["usuario"] if token else None
+
+    rotas_publicas = ["login","registro"]
+
+    if request.endpoint not in rotas_publicas:
+        if not usuario:
+            return redirect("/login")
 
 
 @app.route("/")
 def home():
     token = request.cookies.get("user_token")
-    usuario = encontrar_usuario_pelo_token(token)["usuario"]
-    session["usuario"] = usuario
+    if token:
+        usuario = encontrar_usuario_pelo_token(token)["usuario"]
+        session["usuario"] = usuario
 
-    data = {"usuario": session["usuario"]}
+        data = {"usuario": session["usuario"]}
 
     return render_template("home.html", context=data)
 
@@ -76,6 +81,26 @@ def login():
                 resposta.set_cookie("user_token", usuario_validado["token"])
                 return resposta
         return redirect("/login")
+    
+
+@app.route("/registro", methods=["POST", "GET"])
+def registro():
+
+    if request.method == "GET":
+        loginForm = LoginForm(request.form)
+        data = {"form": loginForm}
+        return render_template("registro.html", context=data)
+
+    if request.method == "POST":
+        usuario = request.form["usuario"]
+        senha = request.form["senha"]
+        usuario_encontrado = procurar_usuario(usuario=usuario)
+
+        if usuario_encontrado:
+            return redirect(url_for("registro"))
+        
+        criar_usuario(usuario=usuario, senha=senha)
+        return redirect(url_for('login'))
 
 @app.get("/logoff")
 def logoff():
@@ -146,6 +171,25 @@ def procurar_produtos():
     produtos = procurar_produtos_por_nome(nome if nome else "")
     data = {"produtos": mapper_produtos(produtos), "nome": nome, "usuario": session["usuario"]}
     return render_template("produtos.html", context=data)
+
+@app.get("/registar_pagamento_compra/<id>")
+def pagar_compra(id):
+    compra = encontrar_compra_pelo_id(id)
+    if compra and not compra["pagador"]:
+        registrar_pagamento_compra(usuario=session["usuario"], compra=compra)
+
+        return redirect(url_for('mostrar_compra', protocolo=compra["protocolo"]))
+    return redirect("/")
+
+@app.get("/remover_pagamento_compra/<id>")
+def remover_pgto_compra(id):
+    token = request.cookies.get("user_token")
+    compra = encontrar_compra_pelo_id(id)
+    usuario = encontrar_usuario_pelo_token(token)
+    if compra and compra["pagador"] == usuario["_id"]:
+        remover_pagamento_compra(compra)
+        return redirect(url_for('mostrar_compra', protocolo=compra["protocolo"]))
+    return redirect("/")
 
 
 if __name__ == "__main__":

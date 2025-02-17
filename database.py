@@ -25,6 +25,10 @@ def procurar_estabelecimento(inscricao) -> dict | None:
     exit()
     return estabelecimento
 
+def procurar_usuario_pelo_id(id):
+    if type(id) == str:
+        id = ObjectId(id)
+    return usuarios.find_one({"_id": id })
 
 def criar_estabelecimento(
     nome, cnpj, inscricao, uf, endereco, apelido=None
@@ -47,9 +51,11 @@ def criar_estabelecimento(
 
     return estabelecimento
 
+
 def encontrar_estabelecimento_pelo_id(id):
     id = ObjectId(id)
     return estabelecimentos.find_one({"_id": {"$eq": id}})
+
 
 def encontrar_compra(protocolo) -> dict | None:
     """encontra uma compra no banco dado um protocolo.
@@ -57,8 +63,12 @@ def encontrar_compra(protocolo) -> dict | None:
     """
     return compras.find_one({"protocolo": {"$eq": protocolo}})
 
+
 def encontrar_compra_pelo_id(id):
+    if type(id) == str:
+        id = ObjectId(id)
     return compras.find_one({"_id": {"$eq": id}})
+
 
 def criar_compra(
     protocolo, total_itens, preco, pagamento, data, id_estabelecimento
@@ -158,38 +168,61 @@ def criar_usuario(usuario: str, senha: str) -> None:
             {"usuario": usuario, "senha": h.hexdigest(), "token": str(uuid4())}
         )
 
+
 def validar_usuario(usuario, senha):
     """Valida o username e senha de um usuario e o retorna, caso passe na validação"""
     h = sha256()
     h.update(str.encode(senha))
 
-    usuario_encontrado = usuarios.find_one({
-        "usuario": {"$eq": usuario},
-        "senha": {"$eq": h.hexdigest()}
-        })
+    usuario_encontrado = usuarios.find_one(
+        {"usuario": {"$eq": usuario}, "senha": {"$eq": h.hexdigest()}}
+    )
     return usuario_encontrado
+
 
 def encontrar_usuario_pelo_token(token: str):
     """encontra um usuario através de um token, caso contrário, retorna None"""
-    usuario = usuarios.find_one({
-        "token": {
-            "$eq": token
-        }
-    })
+    usuario = usuarios.find_one({"token": {"$eq": token}})
 
     return usuario
 
+
 def encontrar_produtos_por_compra(id_compra):
-    return produtos.find({"id_compra": {"$eq":id_compra}})
-    
+    return produtos.find({"id_compra": {"$eq": id_compra}})
+
+
 def encontrar_produtos_por_empresa(id_empresa) -> list[dict]:
     produtos_empresa = []
-    for compra in compras.find({"id_estabelecimento": {"$eq":ObjectId(id_empresa)}}):
-        produtos_empresa += produtos.find({"id_compra": {"$eq":compra["_id"]}})
-    
+    for compra in compras.find({"id_estabelecimento": {"$eq": ObjectId(id_empresa)}}):
+        produtos_empresa += produtos.find({"id_compra": {"$eq": compra["_id"]}})
+
     return produtos_empresa
 
+
 def mudar_apelido_da_empresa(id_empresa, apelido):
-    empresa = estabelecimentos.update_one({"_id": {"$eq": id_empresa}}, {"$set": {
-        "apelido": apelido
-    }})
+    empresa = estabelecimentos.update_one(
+        {"_id": {"$eq": id_empresa}}, {"$set": {"apelido": apelido}}
+    )
+
+def registrar_pagamento_compra(usuario, compra):
+    """Registra o pagamento de uma compra"""
+    usuario = usuarios.find_one({"usuario": usuario})
+
+    if usuario:
+        query = {"_id": compra["_id"]}
+
+        operacao = {"$set": {
+            "pagador": usuario["_id"]
+        }}
+
+        compras.update_one(query, operacao)
+
+def remover_pagamento_compra(compra):
+    """remove o pagamento de uma compra"""
+    query ={"_id": compra["_id"]}
+
+    operacao = {"$set": {
+        "pagador": None
+    }}
+
+    compras.update_one(query, operacao)
