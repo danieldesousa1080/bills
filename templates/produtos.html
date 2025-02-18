@@ -7,11 +7,10 @@
 {% block content %}
 
 <form action="{{ url_for('procurar_produtos')}}">
-    <p>{{ request.args.get('q', '') }}</p>
-    <input type="text" name="q" id="q" maxlength="100">
+    {{ context['form'].busca(class="busca", placeholder="insira sua pesquisa") }}
     <input type="submit">
 </form>
-
+<br>
 <div class="divTable redTable">
     <div class="divTableHeading">
         <div class="divTableRow">
@@ -32,8 +31,14 @@
             <div class="divTableCell">{{ produto["quantidade"] }}</div>
             <div class="divTableCell">{{ produto["unidade"] }}</div>
             <div class="divTableCell">{{produto["preco"] }}</div>
-            <div class="divTableCell">{{ '%0.2f'|format(produto["preco_real"])|float }} / {{ produto["unidade"] }}</div>
-            <div class="divTableCell">{{ produto["compra"]["estabelecimento"]["nome"] }}</div>
+            <div class="divTableCell">
+                {{ '%0.2f'|format(produto["preco_real"])|float }} / {{ produto["unidade"] }}
+            </div>
+            <div class="divTableCell">
+                <a href="{{ url_for('informacoes_empresa', id=produto['compra']['estabelecimento']['id']) }}">
+                    {{ produto["compra"]["estabelecimento"]["nome"] }}
+                </a>
+            </div>
         </div>
         {% endfor %}
     </div>

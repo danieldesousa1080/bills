@@ -6,13 +6,16 @@
 {% block head %}{% endblock %}
 </head>
 <body>
-    <header>
+    <header class="base-header">
         <div class="links">
             <a href="{{url_for('procurar_produtos')}}">Procurar produtos</a>
             <a href="{{url_for('mostrar_compras')}}">Todas as compras</a>
+            {% if user["admin"] %}
+                <a href="{{ url_for('admin_page') }}">Dashboard Admin</a>
+            {% endif %}
         </div>
         <div class="user">
-            Bem vindo {{ context["usuario"] }}!!
+            Bem vindo {{ user["usuario"] }}!!
             <a href="{{ url_for('logoff') }}">
                 <button>deslogar</button>
             </a>

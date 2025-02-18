@@ -11,21 +11,29 @@
         {{ context["form"].fim(class="formulario") }}
         <button type="submit">Filtrar</button>
     </form>
-
-    <button>Gerar relatório do período</button>
-    <h1>Mostrando compras realizadas entre os dias {{ context["compras"][-1]["data"]}} e {{context["compras"][0]["data"] }}</h1>
-    <h3>Total do período: R$ {{'%0.2f'|format(context["valor_periodo"])|float}}</h3>
+    <div class="info">
+        <h1>Compras realizadas entre os dias {{ context["compras"][-1]["data"]}} e {{context["compras"][0]["data"] }}</h1>
+        <h3>Total do período: R$ {{'%0.2f'|format(context["valor_periodo"])|float}}</h3>
+        <h3>Total de compras: {{ context["compras"]| length }}</h3>
+    </div>
+    <hr>
     <div class="compras-lista">
        {% for compra in context["compras"] %}
-       <a href="{{ url_for('mostrar_compra', protocolo=compra['protocolo']) }}">
+       <a href="{{ url_for('mostrar_compra', protocolo=compra['protocolo']) }}" class="compra">
         <div class="compras-container" title="valor: R${{ compra['preco'] }}">
-            <h2>Compra do dia {{compra["data"]}} em {{compra["estabelecimento"]["nome"]}}</h2>
-            <p><b>Preço:</b> R${{compra["preco"]}}</p>
-            <p><b>Total de itens:</b> {{compra["total_itens"]}}</p>
+            <div>
+                <h2>{{compra["data"]}}</h2>
+                <br> 
+                <h3>{{compra["estabelecimento"]["nome"]}}</h3>
+            </div> 
+            <br>
+            <h2>R${{compra["preco"]}}</h2>
+            <div>
+                <h2>{{compra["total_itens"]}} itens</h2>
+            </div>
             <p><b>Pagador: </b>{{ compra["pagador"] if compra["pagador"] else 'não identificado' }}</p>
         </div>
        </a>
-       <hr>
        {% endfor %}
     </div>
 {% endblock %}

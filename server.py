@@ -1,7 +1,7 @@
 from flask import Flask, request
 from flask import render_template, make_response, redirect, session, url_for
 from datetime import date, datetime
-from wtforms import Form, DateField, StringField, PasswordField
+from wtforms import Form, DateField, StringField, PasswordField, SearchField
 
 
 class RangeDateForm(Form):
@@ -13,9 +13,15 @@ class LoginForm(Form):
     usuario = StringField("usuario")
     senha = PasswordField("senha")
 
-
 class StoreForm(Form):
     apelido = StringField("apelido")
+
+class SearchForm(Form):
+    busca = SearchField("busca")
+
+class AdminForm(Form):
+    inicio = DateField("inicio", format="%Y-%m-%d")
+    fim = DateField("fim", format="%Y-%m-%d")
 
 from database import (
     compras_por_periodo,
@@ -50,12 +56,9 @@ def validar_identidade():
 def home():
     token = request.cookies.get("user_token")
     if token:
-        usuario = encontrar_usuario_pelo_token(token)["usuario"]
-        session["usuario"] = usuario
+        user = encontrar_usuario_pelo_token(token)
 
-        data = {"usuario": session["usuario"]}
-
-    return render_template("home.html", context=data)
+    return render_template("home.html", user=user)
 
 
 @app.route("/login", methods=["POST", "GET"])
@@ -110,6 +113,8 @@ def logoff():
 
 @app.get("/compras")
 def mostrar_compras():
+    token = request.cookies["user_token"]
+    user = encontrar_usuario_pelo_token(token)
 
     form = RangeDateForm(request.args)
 
@@ -126,35 +131,50 @@ def mostrar_compras():
     
     compras = mapper_compras(compras)
 
-    data = {"compras": compras, "valor_periodo": valor, "form": form, "usuario": session["usuario"]}
+    data = {"compras": compras, "valor_periodo": valor, "form": form}
 
-    return render_template("compras.html", context=data)
+    return render_template("compras.html", context=data, user=user)
 
 
 @app.get("/compra/<protocolo>")
 def mostrar_compra(protocolo):
+    token = request.cookies["user_token"]
+    user = encontrar_usuario_pelo_token(token)
 
     compra = encontrar_compra(protocolo)
     produtos: list = procurar_produtos_por_compra(compra["_id"])
 
-    data = {"compra": mapper_compra(compra), "produtos": mapper_produtos(produtos), "usuario": session["usuario"]}
+    data = {"compra": mapper_compra(compra), "produtos": mapper_produtos(produtos)}
 
-    return render_template("compra.html", context=data)
+    return render_template("compra.html", context=data, user=user)
+
+
+@app.post("/compra/<protocolo>")
+def atrelar_produtos(protocolo):
+    produtos = request.form.getlist("produtos")
+    token = request.cookies.get("user_token")
+
+    for produto in produtos:
+        registrar_pagamento_produto(produto, encontrar_usuario_pelo_token(token)["_id"])
+    
+    return redirect(request.url)
 
 @app.route("/empresa/<id>", methods=["GET","POST"])
 def informacoes_empresa(id):
+    token = request.cookies["user_token"]
+    user = encontrar_usuario_pelo_token(token)
     empresa = encontrar_estabelecimento_pelo_id(id)
 
     if request.method == "GET":
+
         form = StoreForm()
         form.apelido.data = empresa["apelido"]
         data = {
             "empresa":mapper_empresa(empresa),
-            "usuario": session["usuario"],
             "form": form
         }
 
-        return render_template("empresa.html", context=data)
+        return render_template("empresa.html", context=data, user=user)
     
     if request.method == "POST":
         novo_apelido = request.form["apelido"]
@@ -165,18 +185,24 @@ def informacoes_empresa(id):
 
 @app.get("/produtos")
 def procurar_produtos():
+    token = request.cookies["user_token"]
+    user = encontrar_usuario_pelo_token(token)
 
-    nome = request.args.get("q")
+    form = SearchForm()
+
+    nome = request.args.get("busca")
+
+    form.busca.data = nome
 
     produtos = procurar_produtos_por_nome(nome if nome else "")
-    data = {"produtos": mapper_produtos(produtos), "nome": nome, "usuario": session["usuario"]}
-    return render_template("produtos.html", context=data)
+    data = {"produtos": mapper_produtos(produtos), "nome": nome, "form": form}
+    return render_template("produtos.html", context=data, user=user)
 
 @app.get("/registar_pagamento_compra/<id>")
 def pagar_compra(id):
     compra = encontrar_compra_pelo_id(id)
     if compra and not compra["pagador"]:
-        registrar_pagamento_compra(usuario=session["usuario"], compra=compra)
+        registrar_pagamento_compra(compra=compra)
 
         return redirect(url_for('mostrar_compra', protocolo=compra["protocolo"]))
     return redirect("/")
@@ -189,6 +215,15 @@ def remover_pgto_compra(id):
     if compra and compra["pagador"] == usuario["_id"]:
         remover_pagamento_compra(compra)
         return redirect(url_for('mostrar_compra', protocolo=compra["protocolo"]))
+    return redirect("/")
+
+@app.get("/admin")
+def admin_page():
+    token = request.cookies["user_token"]
+    user = encontrar_usuario_pelo_token(token)
+
+    if user["admin"]:
+        return render_template("admin.html", user=user)
     return redirect("/")
 
 

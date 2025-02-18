@@ -14,6 +14,7 @@ compras = database["compras"]
 estabelecimentos = database["estabelecimentos"]
 produtos = database["produtos"]
 usuarios = database["usuarios"]
+sessoes = database["sessoes"]
 
 
 def procurar_estabelecimento(inscricao) -> dict | None:
@@ -25,10 +26,12 @@ def procurar_estabelecimento(inscricao) -> dict | None:
     exit()
     return estabelecimento
 
+
 def procurar_usuario_pelo_id(id):
     if type(id) == str:
         id = ObjectId(id)
-    return usuarios.find_one({"_id": id })
+    return usuarios.find_one({"_id": id})
+
 
 def criar_estabelecimento(
     nome, cnpj, inscricao, uf, endereco, apelido=None
@@ -204,6 +207,7 @@ def mudar_apelido_da_empresa(id_empresa, apelido):
         {"_id": {"$eq": id_empresa}}, {"$set": {"apelido": apelido}}
     )
 
+
 def registrar_pagamento_compra(usuario, compra):
     """Registra o pagamento de uma compra"""
     usuario = usuarios.find_one({"usuario": usuario})
@@ -211,18 +215,30 @@ def registrar_pagamento_compra(usuario, compra):
     if usuario:
         query = {"_id": compra["_id"]}
 
-        operacao = {"$set": {
-            "pagador": usuario["_id"]
-        }}
+        operacao = {"$set": {"pagador": usuario["_id"]}}
 
         compras.update_one(query, operacao)
 
+
 def remover_pagamento_compra(compra):
     """remove o pagamento de uma compra"""
-    query ={"_id": compra["_id"]}
+    query = {"_id": compra["_id"]}
 
-    operacao = {"$set": {
-        "pagador": None
-    }}
+    operacao = {"$set": {"pagador": None}}
 
     compras.update_one(query, operacao)
+
+
+def registrar_pagamento_produto(id_produto, id_pagador):
+    if type(id_produto) == str:
+        id_produto = ObjectId(id_produto)
+    if type(id_pagador) == str:
+        id_pagador = ObjectId(id_pagador)
+
+    return produtos.update_one({"_id": id_produto}, {"$set": {"pagador": id_pagador}})
+
+def criar_nova_sessao(inicio: datetime.date, fim: datetime.date):
+    ...
+
+def remover_sessao(id):
+    ...

@@ -17,21 +17,34 @@ def mapper_compra(compra):
         "preco":compra["preco"],
         "total_itens":int (compra["total_itens"]),
         "preco_por_produto": preco_medio_produtos(encontrar_produtos_por_compra(compra["_id"])),
-        "pagador": pagador["usuario"] if pagador else None 
+        "pagador": pagador["usuario"] if pagador else None,
+        "editavel": compra["editavel"]
     }
 
 def mapper_produtos(produtos: list[dict]) -> dict:
-    return [
+    # Mapeia os produtos e inclui a compra associada
+    produtos_mapeados = [
         {
+            "id": produto["_id"],
             "nome": produto["nome"],
             "preco": produto["valor"],
             "unidade": produto["unidade"],
             "quantidade": produto["quantidade"],
             "preco_real": produto["valor"] / produto["quantidade"],
             "compra": mapper_compra(encontrar_compra_pelo_id(produto["id_compra"])),
+            "pagador": procurar_usuario_pelo_id(produto["pagador"])['usuario'] if produto["pagador"] else None
         }
         for produto in produtos
     ]
+
+    # Ordena os produtos pela data da compra (assumindo que a compra tem um campo "data")
+    produtos_ordenados = sorted(
+        produtos_mapeados,
+        key=lambda x: x["compra"]["data"],  # Acessa a data dentro da compra
+        reverse=True  # Ordena do mais recente para o mais antigo
+    )
+
+    return produtos_ordenados
 
 def mapper_empresa(empresa: dict) -> dict:
 

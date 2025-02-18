@@ -2,32 +2,66 @@
 
 {% block content_title %}Detalhes da compra{% endblock %}
 {% block head %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/compra.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/compra.css') }}">
 {% endblock %}
 {% block content %}
-    <a href="{{ url_for('informacoes_empresa', id=context['compra']['estabelecimento']['id']) }}"><h1>{{ context["compra"]["estabelecimento"]["nome"] }}</h1></a>
-    <p><b>{{ context["compra"]["estabelecimento"]["endereco"] }}</b></p>
-    <p><b>Total:</b> R$ {{ context["compra"]["preco"] }}</p>
-    <p><b>Preço médio por produto: </b>R$ {{ '%0.2f'|format(context["compra"]["preco_por_produto"])|float }}</p>
-    <p><b>Data:</b> {{ context["compra"]["data"] }}</p>
-    {% if not context["compra"]["pagador"] %}
-    <a href="{{ url_for('pagar_compra', id=context['compra']['id']) }}"><button>Eu paguei por isso!</button></a>
-    {% elif context["compra"]["pagador"] == context["usuario"] %}
-    <p>Você registrou o pagamento dessa compra</p>
-    <a href="{{ url_for('remover_pgto_compra', id=context['compra']['id']) }}"><button>Remover pagamento</button></a>
-    {% else %}
-    <p><b>Pagador: </b> {{ context["compra"]["pagador"] }}</p>
-    {% endif %}
+{% if context["compra"]["editavel"] %}
+    <span>Modo de <i>edição</i></span>
+{% else %}
+    <span>Modo de <i>visualização</i></span>
     <br>
-    <p><b>Itens:</b> {{ context["compra"]["total_itens"] }}</p>
-    <div class="produtos-lista">
-        {% for produto in context["produtos"] %}
-            <div class="produto-container">
-                <p><b>{{ produto["nome"] }}</b></p>
-                <p><b>Preço:</b> R$ {{produto["preco"]}}</p>
-                <p><b>Preço Real: </b>R$ {{ '%0.2f'|format(produto["preco_real"])|float }} / {{ produto["unidade"] }}</p>
-                <p><b>Quantidade: </b> {{ produto["quantidade"] }} {{ produto["unidade"] }}</p>
-            </div>    
-        {% endfor %}
+{% endif %}
+<a class="nome-empresa" href="{{ url_for('informacoes_empresa', id=context['compra']['estabelecimento']['id']) }}">
+    {{ context["compra"]["estabelecimento"]["nome"] }}
+</a>
+<p><b>{{ context["compra"]["estabelecimento"]["endereco"] }}</b></p>
+<p><b>Total:</b> R$ {{ context["compra"]["preco"] }}</p>
+<p><b>Preço médio por produto: </b>R$ {{ '%0.2f'|format(context["compra"]["preco_por_produto"])|float }}</p>
+<p><b>Data:</b> {{ context["compra"]["data"] }}</p>
+{% if not context["compra"]["pagador"] %}
+{% if context["compra"]["editavel"] %}
+<a href="{{ url_for('pagar_compra', id=context['compra']['id']) }}"><button>Eu paguei por isso!</button></a>
+{% endif %}
+{% elif context["compra"]["pagador"] == context["usuario"] %}
+<p>Você registrou o pagamento dessa compra</p>
+{% if context["compra"]["editavel"] %}
+<a href="{{ url_for('remover_pgto_compra', id=context['compra']['id']) }}"><button>Remover pagamento</button></a>
+{% endif %}
+{% else %}
+<p><b>Pagador: </b> {{ context["compra"]["pagador"] }}</p>
+{% endif %}
+<a href=""><button>Recarregar página</button></a>
+<br>
+<p><b>Itens:</b> {{ context["compra"]["total_itens"] }}</p>
+{% if context["compra"]["editavel"] %}
+<p>Se algum item desta compra foi de seu uso pessoal, por favor, clique em "item pessoal"</p>
+{% endif %}
+<div class="produtos-lista">
+    {% for produto in context["produtos"] %}
+    <div class="produto-container">
+        <p><b>{{ produto["nome"] }}</b></p>
+        <p><b>Preço:</b> R$ {{ '%0.2f'|format(produto["preco"])|float }}</p>
+        <p><b>Preço Real: </b>R$ {{ '%0.2f'|format(produto["preco_real"])|float }} / {{ produto["unidade"] }}</p>
+        <p><b>Quantidade: </b> {{ produto["quantidade"] }} {{ produto["unidade"] }}</p>
+        {% if not produto["pagador"] %}
+        <p>
+            <b>Produto de uso coletivo / Não avaliado</b>
+        </p>
+        {% if context["compra"]["editavel"] %}
+        <a>
+            <button class="enviar">Meu item pessoal!</button>
+        </a>
+        {% endif %}
+        {% elif produto["pagador"] == context["usuario"] %}
+        <p>Você indicou que esse produto é para seu uso pessoal</p>
+        {% if context["compra"]["editavel"] %}
+        <a href=""><button>remover escolha</button></a>
+        {% endif %}
+        {% else %}
+            <b>Item pessoal de {{ produto["pagador"] }}</b>
+        {% endif %}
+        </p>
     </div>
+    {% endfor %}
+</div>
 {% endblock %}

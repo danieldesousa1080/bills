@@ -4,8 +4,33 @@
     gap: 8px;
 }
 
+.nome-empresa { 
+    text-decoration: none;
+    color:  rgb(0, 76, 217);
+    width: fit-content;
+    font-size: xx-large;
+}
+
+.nome-empresa:hover {
+    font-weight: bold;
+    color: rgb(172, 176, 255) ;
+}
+
 .produto-container {
-    padding: 4px;
-    background-color: lightgreen;
-    border: 1px solid green;
+    padding: 8px;
+    border-bottom: 1px solid rgb(0, 76, 217);
+}
+
+.produto-container:hover{
+    background-color: rgb(172, 176, 255);
+}
+
+.enviar {
+    padding: 8px;
+    border:none;
+    border-radius: 20px;
+    background-color: darkblue;
+    color: white;
+    margin-top: 10px;
+    cursor: pointer;
 }

@@ -1,16 +1,37 @@
+.compras-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.info {
+    padding-top: 8px;
+    padding-bottom: 16px;
+}
+
 .compras-lista a{
     text-decoration: none;
     color: black;
 }
 
+.compra {
+    border-bottom: 1px solid rgb(0, 76, 217);
+}
+
 .compras-container {
-    background-color: aquamarine;
     cursor: pointer;
-    padding: 4px;
+    background-color: rgb(255, 255, 255);
+    padding: 8px;
+    border-radius: 10px;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    justify-content: space-between;
+    transition: 1s ease;
+    margin: 0;
 }
 
 .compras-container:hover {
-    background-color: rgb(255, 154, 154);
+    background-color: rgb(172, 176, 255);
 }
 
 button {
