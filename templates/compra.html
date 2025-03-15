@@ -7,14 +7,23 @@
 {% block content %}
 {% if context["compra"]["editavel"] %}
     <span>Modo de <i>edição</i></span>
+    {% if user["admin"] %}
+      <a href="{{ url_for('mudar_para_o_modo_de_visualizacao', protocolo=context['compra']['protocolo']) }}"><button>Mudar para o modo de visualização</button></a>
+    {% endif %}
 {% else %}
     <span>Modo de <i>visualização</i></span>
+    {% if user["admin"] %}
+      <a href="{{ url_for('mudar_para_o_modo_de_edicao', protocolo=context['compra']['protocolo']) }}"><button>Mudar para o modo de edição</button></a>
+    {% endif %}
     <br>
 {% endif %}
 <a class="nome-empresa" href="{{ url_for('informacoes_empresa', id=context['compra']['estabelecimento']['id']) }}">
     {{ context["compra"]["estabelecimento"]["nome"] }}
 </a>
 <p><b>{{ context["compra"]["estabelecimento"]["endereco"] }}</b></p>
+{% if user["admin"] %}
+  <p><b>Protocolo: </b>{{ context["compra"]["protocolo"] }}</p>
+{% endif %}
 <p><b>Total:</b> R$ {{ context["compra"]["preco"] }}</p>
 <p><b>Preço médio por produto: </b>R$ {{ '%0.2f'|format(context["compra"]["preco_por_produto"])|float }}</p>
 <p><b>Data:</b> {{ context["compra"]["data"] }}</p>

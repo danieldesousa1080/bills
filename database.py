@@ -89,6 +89,7 @@ def criar_compra(
                 "data": data,
                 "id_estabelecimento": id_estabelecimento,
                 "pagador": None,
+                "editavel": False
             }
         )
         return compra
@@ -236,6 +237,19 @@ def registrar_pagamento_produto(id_produto, id_pagador):
         id_pagador = ObjectId(id_pagador)
 
     return produtos.update_one({"_id": id_produto}, {"$set": {"pagador": id_pagador}})
+
+def definir_edicao_compra(id_compra, editavel: bool):
+    """Define se a compra é editavel ou não"""
+    compras.update_one(
+        {
+            "_id": id_compra
+        },
+        {
+            "$set": {
+                "editavel": editavel
+            }
+        }
+    )
 
 def criar_nova_sessao(inicio: datetime.date, fim: datetime.date):
     ...

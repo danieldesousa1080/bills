@@ -84,7 +84,7 @@ def login():
                 resposta.set_cookie("user_token", usuario_validado["token"])
                 return resposta
         return redirect("/login")
-    
+
 
 @app.route("/registro", methods=["POST", "GET"])
 def registro():
@@ -101,7 +101,7 @@ def registro():
 
         if usuario_encontrado:
             return redirect(url_for("registro"))
-        
+
         criar_usuario(usuario=usuario, senha=senha)
         return redirect(url_for('login'))
 
@@ -128,7 +128,7 @@ def mostrar_compras():
     else:
         compras = compras_por_periodo().sort("data", -1)
         valor = valor_total_por_periodo()
-    
+
     compras = mapper_compras(compras)
 
     data = {"compras": compras, "valor_periodo": valor, "form": form}
@@ -144,10 +144,24 @@ def mostrar_compra(protocolo):
     compra = encontrar_compra(protocolo)
     produtos: list = procurar_produtos_por_compra(compra["_id"])
 
-    data = {"compra": mapper_compra(compra), "produtos": mapper_produtos(produtos)}
+    data = {"compra": mapper_compra(compra), "produtos": mapper_produtos(produtos), "usuario": user["usuario"]}
 
     return render_template("compra.html", context=data, user=user)
 
+@app.get("/compra/<protocolo>/modo/edicao")
+def mudar_para_o_modo_de_edicao(protocolo):
+    compra = encontrar_compra(protocolo)
+    definir_edicao_compra(compra["_id"], True)
+
+    return redirect(url_for('mostrar_compra', protocolo=protocolo))
+
+
+@app.get("/compra/<protocolo>/modo/visualizacao")
+def mudar_para_o_modo_de_visualizacao(protocolo):
+    compra = encontrar_compra(protocolo)
+    definir_edicao_compra(compra["_id"], False)
+
+    return redirect(url_for('mostrar_compra', protocolo=protocolo))
 
 @app.post("/compra/<protocolo>")
 def atrelar_produtos(protocolo):
@@ -156,7 +170,7 @@ def atrelar_produtos(protocolo):
 
     for produto in produtos:
         registrar_pagamento_produto(produto, encontrar_usuario_pelo_token(token)["_id"])
-    
+
     return redirect(request.url)
 
 @app.route("/empresa/<id>", methods=["GET","POST"])
@@ -175,7 +189,7 @@ def informacoes_empresa(id):
         }
 
         return render_template("empresa.html", context=data, user=user)
-    
+
     if request.method == "POST":
         novo_apelido = request.form["apelido"]
         if empresa["apelido"] != novo_apelido:
@@ -195,14 +209,17 @@ def procurar_produtos():
     form.busca.data = nome
 
     produtos = procurar_produtos_por_nome(nome if nome else "")
-    data = {"produtos": mapper_produtos(produtos), "nome": nome, "form": form}
+    produtos = mapper_produtos(produtos)
+
+    data = {"produtos": produtos, "nome": nome, "form": form}
     return render_template("produtos.html", context=data, user=user)
 
 @app.get("/registar_pagamento_compra/<id>")
 def pagar_compra(id):
     compra = encontrar_compra_pelo_id(id)
+    token = request.cookies.get("user_token")
     if compra and not compra["pagador"]:
-        registrar_pagamento_compra(compra=compra)
+        registrar_pagamento_compra(usuario=encontrar_usuario_pelo_token(token)["usuario"], compra=compra)
 
         return redirect(url_for('mostrar_compra', protocolo=compra["protocolo"]))
     return redirect("/")
@@ -218,6 +235,7 @@ def remover_pgto_compra(id):
     return redirect("/")
 
 @app.get("/admin")
+
 def admin_page():
     token = request.cookies["user_token"]
     user = encontrar_usuario_pelo_token(token)

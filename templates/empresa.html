@@ -12,6 +12,7 @@
 <p><b>Apelido: </b>{{ context["empresa"]["apelido"] }}</p>
 <p><b>Total de produtos comprados: {{ context["empresa"]["total_produtos"] }}</b></p>
 <p><b>Média de preço por produto: </b>{{ '%0.2f'|format(context["empresa"]["preco_por_produto"])|float }}</p>
+{% if user['admin'] %}
 
 <h3>Definir um apelido para a empresa:</h3>
     <form action="{{ url_for('informacoes_empresa', id=context['empresa']['id'])}}" method="post" class="formulario">
@@ -20,5 +21,7 @@
     </form>
 
 <p>Alterar o apelido da empresa fará com que ela apareça com esse nome em todas as outras telas</p>
+
+{% endif %}
 
 {% endblock %}

@@ -1,5 +1,6 @@
 from database import *
 from util import preco_medio_produtos
+from datetime import datetime
 
 def mapper_compras(compras):
     return [
@@ -23,28 +24,28 @@ def mapper_compra(compra):
 
 def mapper_produtos(produtos: list[dict]) -> dict:
     # Mapeia os produtos e inclui a compra associada
-    produtos_mapeados = [
-        {
-            "id": produto["_id"],
-            "nome": produto["nome"],
-            "preco": produto["valor"],
-            "unidade": produto["unidade"],
-            "quantidade": produto["quantidade"],
-            "preco_real": produto["valor"] / produto["quantidade"],
-            "compra": mapper_compra(encontrar_compra_pelo_id(produto["id_compra"])),
-            "pagador": procurar_usuario_pelo_id(produto["pagador"])['usuario'] if produto["pagador"] else None
-        }
-        for produto in produtos
-    ]
+    produtos_mapeados = []
 
-    # Ordena os produtos pela data da compra (assumindo que a compra tem um campo "data")
-    produtos_ordenados = sorted(
-        produtos_mapeados,
-        key=lambda x: x["compra"]["data"],  # Acessa a data dentro da compra
-        reverse=True  # Ordena do mais recente para o mais antigo
-    )
+    def _chave(produto):
+        return produto["data_compra"]
 
-    return produtos_ordenados
+    for produto in produtos:
+        compra = mapper_compra(encontrar_compra_pelo_id(produto["id_compra"]))
+        produtos_mapeados.append(
+                {
+                    "data_compra": datetime.strptime(compra["data"], "%d/%m/%Y").date(),
+                    "id": produto["_id"],
+                    "nome": produto["nome"],
+                    "preco": produto["valor"],
+                    "unidade": produto["unidade"],
+                    "quantidade": produto["quantidade"],
+                    "preco_real": produto["valor"] / produto["quantidade"],
+                    "compra": compra,
+                    "pagador": procurar_usuario_pelo_id(produto["pagador"])['usuario'] if produto["pagador"] else None
+                }
+                )
+
+    return sorted(produtos_mapeados, key=_chave, reverse=True)
 
 def mapper_empresa(empresa: dict) -> dict:
 

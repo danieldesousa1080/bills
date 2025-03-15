@@ -20,8 +20,15 @@
     <div class="compras-lista">
        {% for compra in context["compras"] %}
        <a href="{{ url_for('mostrar_compra', protocolo=compra['protocolo']) }}" class="compra">
-        <div class="compras-container" title="valor: R${{ compra['preco'] }}">
-            <div>
+        <div class="compras-container" title="valor: R${{ compra['preco'] }}"
+        {% if compra["editavel"] %}
+            style="background-color: rgb(0, 125, 167); color: white;"
+        {% endif %}
+        >
+        <div>
+                {% if compra["editavel"] %}
+                    <span>aberta para edição</span>
+                {% endif %}
                 <h2>{{compra["data"]}}</h2>
                 <br> 
                 <h3>{{compra["estabelecimento"]["nome"]}}</h3>

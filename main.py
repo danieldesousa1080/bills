@@ -11,7 +11,6 @@ def ler_qrcode_camera():
     # Inicializa a câmera (0 é geralmente a câmera padrão)
 
     camera_str = config["CAMERA"] if config["CAMERA"] != "local" else 0
-
     camera = cv2.VideoCapture(camera_str)
 
     print("[INFO] Aponte a câmera para o QR Code. Pressione 'q' para sair.")
@@ -31,7 +30,7 @@ def ler_qrcode_camera():
             # Extrai os dados do QR Code
             dados = qr_code.data.decode('utf-8')
             tipo = qr_code.type
-            
+
             # Imprime as informações no terminal
             get_bill_info(str(dados))
             exit()
