@@ -89,7 +89,8 @@ def criar_compra(
                 "data": data,
                 "id_estabelecimento": id_estabelecimento,
                 "pagador": None,
-                "editavel": False
+                "editavel": False,
+                "analizada": False
             }
         )
         return compra
@@ -184,7 +185,7 @@ def validar_usuario(usuario, senha):
     return usuario_encontrado
 
 
-def encontrar_usuario_pelo_token(token: str):
+def encontrar_usuario_pelo_token(token: str) -> dict | None:
     """encontra um usuario através de um token, caso contrário, retorna None"""
     usuario = usuarios.find_one({"token": {"$eq": token}})
 
@@ -238,6 +239,14 @@ def registrar_pagamento_produto(id_produto, id_pagador):
 
     return produtos.update_one({"_id": id_produto}, {"$set": {"pagador": id_pagador}})
 
+def remover_pagamento_produto(id_produto, id_pagador):
+    if type(id_produto) == str:
+        id_produto = ObjectId(id_produto)
+    if type(id_pagador) == str:
+        id_pagador = ObjectId(id_pagador)
+
+    return produtos.update_one({"_id": id_produto}, {"$set": {"pagador": None}})
+
 def definir_edicao_compra(id_compra, editavel: bool):
     """Define se a compra é editavel ou não"""
     compras.update_one(
@@ -251,8 +260,55 @@ def definir_edicao_compra(id_compra, editavel: bool):
         }
     )
 
-def criar_nova_sessao(inicio: datetime.date, fim: datetime.date):
-    ...
+def verificar_compras_editaveis():
+    """Retorna verdadeiro caso haja compras editaveis"""
+    return bool(compras.find_one({
+        "editavel": True
+    }))
 
-def remover_sessao(id):
-    ...
+def finalizar_sessão_aberta():
+    return compras.update_many(
+        {
+            "editavel": True
+        },
+        {
+            "$set": {
+                "editavel": False,
+            }
+        }
+    )
+
+def criar_nova_sessao(inicio: datetime.date, fim: datetime.date):
+    return compras.update_many(
+        {
+            "$and": [
+                {
+                    "data": {
+                        "$lt":fim,
+                        "$gte":inicio
+                    },
+                    "analizada": {
+                        "$eq": False
+                    }
+                }
+            ]
+                   },
+            {
+            "$set": {
+                "editavel": True
+            }
+            }
+    )
+
+def finalizar_compra(id, valor: bool):
+    print(f"Fui chamado! id: {id} | valor: {valor}")
+    return compras.update_one(
+        {
+            "_id": ObjectId(id)
+        },
+        {
+            "$set": {
+                "analizada": valor
+            }
+        }
+    )

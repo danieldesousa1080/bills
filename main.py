@@ -9,7 +9,6 @@ config = dotenv_values()
 
 def ler_qrcode_camera():
     # Inicializa a câmera (0 é geralmente a câmera padrão)
-
     camera_str = config["CAMERA"] if config["CAMERA"] != "local" else 0
     camera = cv2.VideoCapture(camera_str)
 

@@ -1,3 +1,5 @@
+import database as db
+
 def preco_medio_produtos(produtos: list[dict]):
     """Recebe uma lista de produtos e retorna o preço médio dela"""
     total = 0

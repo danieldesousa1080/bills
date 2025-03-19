@@ -7,16 +7,35 @@
 {% block content %}
 {% if context["compra"]["editavel"] %}
     <span>Modo de <i>edição</i></span>
-    {% if user["admin"] %}
-      <a href="{{ url_for('mudar_para_o_modo_de_visualizacao', protocolo=context['compra']['protocolo']) }}"><button>Mudar para o modo de visualização</button></a>
-    {% endif %}
 {% else %}
     <span>Modo de <i>visualização</i></span>
-    {% if user["admin"] %}
-      <a href="{{ url_for('mudar_para_o_modo_de_edicao', protocolo=context['compra']['protocolo']) }}"><button>Mudar para o modo de edição</button></a>
-    {% endif %}
-    <br>
 {% endif %}
+{% if context["compra"]["analizada"] %}
+    <br>
+    <span>Esta compra já foi analizada</span>
+{% else %}
+    <br>
+    <span>Esta compra ainda não foi analizada</span>
+{% endif %}
+
+{% if user["admin"] %}
+
+    <h2>Modo administrador</h2>
+
+    {% if context["compra"]["editavel"] %}
+        <a href="{{ url_for('mudar_para_o_modo_de_visualizacao', protocolo=context['compra']['protocolo']) }}"><button>Mudar para o modo de visualização</button></a>
+    {%else%}
+        <a href="{{ url_for('mudar_para_o_modo_de_edicao', protocolo=context['compra']['protocolo']) }}"><button>Mudar para o modo de edição</button></a>
+    {% endif %}
+
+    {% if context["compra"]["analizada"] %}
+    <a href="{{ url_for('definir_compra_nao_analizada', id=context["compra"]["id"]) }}"><button>Definir compra como "Não analizada"</button></a>
+    {% else %}
+        <a href="{{ url_for('definir_compra_analizada', id=context["compra"]["id"]) }}"><button>Definir compra como "Analizada"</button></a>
+    {% endif %}
+
+{% endif %}
+<br>
 <a class="nome-empresa" href="{{ url_for('informacoes_empresa', id=context['compra']['estabelecimento']['id']) }}">
     {{ context["compra"]["estabelecimento"]["nome"] }}
 </a>
@@ -57,14 +76,14 @@
             <b>Produto de uso coletivo / Não avaliado</b>
         </p>
         {% if context["compra"]["editavel"] %}
-        <a>
+        <a href="{{ url_for('adicionar_pgto_produto', id=produto['id'], protocolo_compra=context['compra']['protocolo']) }}">
             <button class="enviar">Meu item pessoal!</button>
         </a>
         {% endif %}
         {% elif produto["pagador"] == context["usuario"] %}
         <p>Você indicou que esse produto é para seu uso pessoal</p>
         {% if context["compra"]["editavel"] %}
-        <a href=""><button>remover escolha</button></a>
+        <a href="{{ url_for('remover_pgto_produto', id=produto['id'], protocolo_compra=context['compra']['protocolo']) }}"><button>remover escolha</button></a>
         {% endif %}
         {% else %}
             <b>Item pessoal de {{ produto["pagador"] }}</b>

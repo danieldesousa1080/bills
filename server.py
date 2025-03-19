@@ -1,13 +1,14 @@
 from flask import Flask, request
-from flask import render_template, make_response, redirect, session, url_for
-from datetime import date, datetime
+from flask import render_template, make_response, redirect, url_for
+from datetime import datetime, timedelta
 from wtforms import Form, DateField, StringField, PasswordField, SearchField
+from mapper import *
+from flask_cors import CORS
 
 
 class RangeDateForm(Form):
     inicio = DateField("inicio", format="%Y-%m-%d")
     fim = DateField("fim", format="%Y-%m-%d")
-
 
 class LoginForm(Form):
     usuario = StringField("usuario")
@@ -32,9 +33,6 @@ from database import (
     encontrar_usuario_pelo_token,
 )
 
-from mapper import *
-from flask_cors import CORS
-
 app = Flask(__name__)
 app.secret_key = "abc123"
 CORS(app)
@@ -50,7 +48,6 @@ def validar_identidade():
     if request.endpoint not in rotas_publicas:
         if not usuario:
             return redirect("/login")
-
 
 @app.route("/")
 def home():
@@ -93,16 +90,12 @@ def registro():
         loginForm = LoginForm(request.form)
         data = {"form": loginForm}
         return render_template("registro.html", context=data)
-
     if request.method == "POST":
         usuario = request.form["usuario"]
         senha = request.form["senha"]
-        usuario_encontrado = procurar_usuario(usuario=usuario)
-
-        if usuario_encontrado:
-            return redirect(url_for("registro"))
 
         criar_usuario(usuario=usuario, senha=senha)
+
         return redirect(url_for('login'))
 
 @app.get("/logoff")
@@ -142,7 +135,7 @@ def mostrar_compra(protocolo):
     user = encontrar_usuario_pelo_token(token)
 
     compra = encontrar_compra(protocolo)
-    produtos: list = procurar_produtos_por_compra(compra["_id"])
+    produtos = procurar_produtos_por_compra(compra["_id"])
 
     data = {"compra": mapper_compra(compra), "produtos": mapper_produtos(produtos), "usuario": user["usuario"]}
 
@@ -163,13 +156,14 @@ def mudar_para_o_modo_de_visualizacao(protocolo):
 
     return redirect(url_for('mostrar_compra', protocolo=protocolo))
 
-@app.post("/compra/<protocolo>")
-def atrelar_produtos(protocolo):
+@app.get("/produto/registrar_dono")
+def registrar_dono_do_produto(id):
     produtos = request.form.getlist("produtos")
     token = request.cookies.get("user_token")
+    usuario = encontrar_usuario_pelo_token(token)["_id"]
 
     for produto in produtos:
-        registrar_pagamento_produto(produto, encontrar_usuario_pelo_token(token)["_id"])
+        registrar_pagamento_produto(produto, usuario)
 
     return redirect(request.url)
 
@@ -234,8 +228,25 @@ def remover_pgto_compra(id):
         return redirect(url_for('mostrar_compra', protocolo=compra["protocolo"]))
     return redirect("/")
 
-@app.get("/admin")
+@app.get("/produto/registrar_pagamento/<protocolo_compra>/<id>")
+def adicionar_pgto_produto(protocolo_compra, id):
+    token = request.cookies["user_token"]
+    user = encontrar_usuario_pelo_token(token)
 
+    registrar_pagamento_produto(id, user["_id"])
+
+    return redirect(url_for('mostrar_compra', protocolo=protocolo_compra))
+
+@app.get("/produto/remover_pagamento/<protocolo_compra>/<id>")
+def remover_pgto_produto(protocolo_compra, id):
+    token = request.cookies["user_token"]
+    user = encontrar_usuario_pelo_token(token)
+
+    remover_pagamento_produto(id, user["_id"])
+
+    return redirect(url_for('mostrar_compra', protocolo=protocolo_compra))
+
+@app.get("/admin")
 def admin_page():
     token = request.cookies["user_token"]
     user = encontrar_usuario_pelo_token(token)
@@ -244,6 +255,50 @@ def admin_page():
         return render_template("admin.html", user=user)
     return redirect("/")
 
+@app.route("/admin/sessao", methods=["GET", "POST"])
+def sessoes():
+    token = request.cookies["user_token"]
+    user = encontrar_usuario_pelo_token(token)
+    
+    form = RangeDateForm(request.args)
+
+    if request.method == "GET":
+        sessao_aberta = not verificar_compras_editaveis()
+
+        return render_template("admin/sessoes.html", user=user, form=form, sessao_aberta=sessao_aberta)
+    
+    if request.method == "POST":
+        inicio = datetime.strptime(request.form["inicio"], "%Y-%m-%d")
+        fim = datetime.strptime(request.form["fim"], "%Y-%m-%d") + timedelta(days=1)
+            
+        print(inicio)
+        print(fim)
+
+        criar_nova_sessao(inicio, fim)
+
+        return redirect(url_for("sessoes"))
+
+@app.get("/admin/sessao/finalizar")
+def finalizar_sessao():
+    finalizar_sessão_aberta()
+    return redirect(url_for("sessoes"))
+
+@app.get("/compra/definir_analizada/<id>")
+def definir_compra_analizada(id):
+    compra = encontrar_compra_pelo_id(id)
+    finalizar_compra(id, True)
+
+    return redirect(url_for('mostrar_compra', protocolo=compra["protocolo"]))
+
+@app.get("/compra/definir_nao_analizada/<id>")
+def definir_compra_nao_analizada(id):
+    compra = encontrar_compra_pelo_id(id)
+    finalizar_compra(id, False)
+
+    return redirect(url_for('mostrar_compra', protocolo=compra["protocolo"]))
+
 
 if __name__ == "__main__":
     app.run("0.0.0.0")
+
+

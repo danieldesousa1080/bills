@@ -9,7 +9,7 @@ def mapper_compras(compras):
     ]
 
 def mapper_compra(compra):
-    pagador = procurar_usuario_pelo_id(compra["pagador"]) 
+    pagador = procurar_usuario_pelo_id(compra["pagador"])
     return {
         "id": compra["_id"],
         "protocolo": compra["protocolo"],
@@ -19,8 +19,24 @@ def mapper_compra(compra):
         "total_itens":int (compra["total_itens"]),
         "preco_por_produto": preco_medio_produtos(encontrar_produtos_por_compra(compra["_id"])),
         "pagador": pagador["usuario"] if pagador else None,
-        "editavel": compra["editavel"]
+        "editavel": compra["editavel"],
+        "analizada": compra["analizada"]
     }
+
+def mapper_produto(produto: dict) -> dict:
+    compra = mapper_compra(encontrar_compra_pelo_id(produto["id_compra"]))
+
+    return {
+                    "data_compra": datetime.strptime(compra["data"], "%d/%m/%Y").date(),
+                    "id": produto["_id"],
+                    "nome": produto["nome"],
+                    "preco": produto["valor"],
+                    "unidade": produto["unidade"],
+                    "quantidade": produto["quantidade"],
+                    "preco_real": produto["valor"] / produto["quantidade"],
+                    "compra": compra,
+                    "pagador": procurar_usuario_pelo_id(produto["pagador"])['usuario'] if produto["pagador"] else None
+                }
 
 def mapper_produtos(produtos: list[dict]) -> dict:
     # Mapeia os produtos e inclui a compra associada
@@ -43,7 +59,7 @@ def mapper_produtos(produtos: list[dict]) -> dict:
                     "compra": compra,
                     "pagador": procurar_usuario_pelo_id(produto["pagador"])['usuario'] if produto["pagador"] else None
                 }
-                )
+            )
 
     return sorted(produtos_mapeados, key=_chave, reverse=True)
 

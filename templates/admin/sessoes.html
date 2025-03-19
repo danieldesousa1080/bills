@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content_title %}Iniciar Nova Sessão{% endblock %}
+
+{% block content %}
+  
+{% if sessao_aberta %}
+  <p>Para iniciar uma sessão, você deve definir uma data de início, uma data de fim e clicar em no botão Criar sessão.</p>
+  <p>Todas as compras referentes ao período selecionado ficarão habilitadas para a edição.</p>
+  
+  <form method="post">
+    {% for field in form %}
+      {{ field.label }} 
+      <br>
+      {{ field }}
+      <br>
+    {% endfor %}
+    <button type="submit">Iniciar</button>
+  </form>
+
+{% else %}
+  <p>Sessão aberta</p>
+  <a href="{{ url_for('finalizar_sessao') }}">finalizar sessao aberta</a>
+{% endif %}
+
+{% endblock %}
