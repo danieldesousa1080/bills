@@ -35,7 +35,7 @@ from database import (
 
 app = Flask(__name__)
 app.secret_key = "abc123"
-CORS(app)
+cores = CORS(app, resources={r"*": {"origins": "*"}})
 
 
 @app.before_request
@@ -136,12 +136,31 @@ def mostrar_compra(protocolo):
 
     compra = encontrar_compra(protocolo)
     produtos = procurar_produtos_por_compra(compra["_id"])
+    participantes = compra["participantes"]
+    usuario_participou = user["_id"] in participantes
 
-    data = {"compra": mapper_compra(compra), "produtos": mapper_produtos(produtos), "usuario": user["usuario"]}
+    pagamento_participantes = {}
 
-    return render_template("compra.html", context=data, user=user)
+    for participante_id in participantes:
+        nome_participante = procurar_usuario_pelo_id(participante_id)["usuario"]
+        pagamento_participantes[nome_participante] = calcular_pagamento_compra_usuario(compra["_id"], participante_id)
 
-@app.get("/compra/<protocolo>/modo/edicao")
+    participantes = [procurar_usuario_pelo_id(usuario) for usuario in participantes]
+
+    produtos = mapper_produtos(produtos)
+
+    data = {"compra": mapper_compra(compra), "produtos": produtos, "usuario": user["usuario"]}
+
+    return render_template(
+        "compra.html", 
+        context=data, 
+        user=user ,
+        usuario_participou=usuario_participou, 
+        participantes=participantes, 
+        pagamento_participantes=pagamento_participantes
+    )
+
+@app.get("/compra/<protocolo>/modo/Consumidoresedicao")
 def mudar_para_o_modo_de_edicao(protocolo):
     compra = encontrar_compra(protocolo)
     definir_edicao_compra(compra["_id"], True)
@@ -283,12 +302,50 @@ def finalizar_sessao():
     finalizar_sessão_aberta()
     return redirect(url_for("sessoes"))
 
+@app.get("/compra/adicionar_participante/<id_compra>")
+def adicionar_participante(id_compra):
+    token = request.cookies["user_token"]
+    user = encontrar_usuario_pelo_token(token)
+    compra = encontrar_compra_pelo_id(id_compra)
+
+    adicionar_participante_compra(id_compra, user["_id"])
+
+    return redirect(url_for("mostrar_compra", protocolo=compra["protocolo"]))
+
+@app.get("/compra/remover_participante/<id_compra>")
+def remover_participante(id_compra):
+    token = request.cookies["user_token"]
+    user = encontrar_usuario_pelo_token(token)
+    compra = encontrar_compra_pelo_id(id_compra)
+
+    remover_participante_compra(id_compra, user["_id"])
+
+    return redirect(url_for("mostrar_compra", protocolo=compra["protocolo"]))
+
+
 @app.get("/compra/definir_analizada/<id>")
 def definir_compra_analizada(id):
     compra = encontrar_compra_pelo_id(id)
     finalizar_compra(id, True)
 
     return redirect(url_for('mostrar_compra', protocolo=compra["protocolo"]))
+
+@app.post("/compra/produto/consumo")
+def enviar_consumo_produtos():
+    data = request.get_json()
+
+    token = request.cookies["user_token"]
+    user = encontrar_usuario_pelo_token(token)
+
+    produtos_selecionados = data["selecionados"]
+    produtos_nao_selecionados = data["nao_selecionados"]
+
+    for id_produto in produtos_selecionados:
+        adicionar_consumidor_produto(id_produto, user["_id"])
+    for id_produto in produtos_nao_selecionados:
+        remover_consumidor_produto(id_produto, user["_id"])
+
+    return data
 
 @app.get("/compra/definir_nao_analizada/<id>")
 def definir_compra_nao_analizada(id):

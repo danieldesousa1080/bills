@@ -1,3 +1,7 @@
+button {
+    font-weight: bold;
+}
+
 .produtos-lista {
     display: flex;
     flex-direction: column;
@@ -19,6 +23,13 @@
 .produto-container {
     padding: 8px;
     border-bottom: 1px solid rgb(0, 76, 217);
+    display: flex;
+    gap: 40px;
+}
+
+.produto-container .checkbox {
+    width: 20px;
+    cursor: pointer;
 }
 
 .produto-container:hover{
@@ -28,9 +39,45 @@
 .enviar {
     padding: 8px;
     border:none;
-    border-radius: 20px;
+    border-radius: 4px;
     background-color: darkblue;
     color: white;
-    margin-top: 10px;
+    height: 100px;
+    width: 100%;
     cursor: pointer;
+    font-size: larger;
+}
+
+.consumidores_container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.consumidores {
+    display: flex;
+    gap: 8px;
+}
+
+.consumidor {
+    background-color: purple;
+    color: white;
+    padding: 5px;
+}
+
+.usuario_consumidor {
+    background-color: greenyellow;
+    color: black;
+}
+
+.mudar-modo{
+    background-color: rgb(255, 255, 148);
+}
+
+.btn-analise {
+    background-color: darksalmon;
+}
+
+.btn-pgto-compra {
+    background-color: hotpink;
 }

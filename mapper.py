@@ -20,11 +20,15 @@ def mapper_compra(compra):
         "preco_por_produto": preco_medio_produtos(encontrar_produtos_por_compra(compra["_id"])),
         "pagador": pagador["usuario"] if pagador else None,
         "editavel": compra["editavel"],
-        "analizada": compra["analizada"]
+        "analizada": compra["analizada"],
+        "participantes": compra["participantes"]
     }
 
 def mapper_produto(produto: dict) -> dict:
     compra = mapper_compra(encontrar_compra_pelo_id(produto["id_compra"]))
+    consumidores = [procurar_usuario_pelo_id(consumidor)["usuario"] for consumidor in produto["consumidores"]]
+
+    print(consumidores)
 
     return {
                     "data_compra": datetime.strptime(compra["data"], "%d/%m/%Y").date(),
@@ -35,7 +39,7 @@ def mapper_produto(produto: dict) -> dict:
                     "quantidade": produto["quantidade"],
                     "preco_real": produto["valor"] / produto["quantidade"],
                     "compra": compra,
-                    "pagador": procurar_usuario_pelo_id(produto["pagador"])['usuario'] if produto["pagador"] else None
+                    "consumidores": consumidores
                 }
 
 def mapper_produtos(produtos: list[dict]) -> dict:
@@ -57,7 +61,8 @@ def mapper_produtos(produtos: list[dict]) -> dict:
                     "quantidade": produto["quantidade"],
                     "preco_real": produto["valor"] / produto["quantidade"],
                     "compra": compra,
-                    "pagador": procurar_usuario_pelo_id(produto["pagador"])['usuario'] if produto["pagador"] else None
+                    "pagador": procurar_usuario_pelo_id(produto["pagador"])['usuario'] if produto["pagador"] else None,
+                    "consumidores": [procurar_usuario_pelo_id(consumidor)["usuario"] for consumidor in produto["consumidores"]]
                 }
             )
 

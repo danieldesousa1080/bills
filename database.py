@@ -68,8 +68,7 @@ def encontrar_compra(protocolo) -> dict | None:
 
 
 def encontrar_compra_pelo_id(id):
-    if type(id) == str:
-        id = ObjectId(id)
+    id = ObjectId(id)
     return compras.find_one({"_id": {"$eq": id}})
 
 
@@ -90,7 +89,8 @@ def criar_compra(
                 "id_estabelecimento": id_estabelecimento,
                 "pagador": None,
                 "editavel": False,
-                "analizada": False
+                "analizada": False,
+                "participantes": []
             }
         )
         return compra
@@ -108,6 +108,7 @@ def criar_produto(
             "id_compra": id_compra,
             "codigo": codigo,
             "pagador": None,
+            "consumidores": []
         }
     )
 
@@ -308,7 +309,102 @@ def finalizar_compra(id, valor: bool):
         },
         {
             "$set": {
-                "analizada": valor
+                "analizada": valor,
+                "editavel": False
             }
         }
     )
+
+def adicionar_consumidor_produto(id_produto, id_usuario):
+    '''Adiciona um consumidor na lista de consumidores do produto'''
+    id_produto = ObjectId(id_produto)
+    id_usuario = ObjectId(id_usuario)
+
+    consumidores = produtos.find_one({
+        "_id": id_produto
+    })["consumidores"]
+
+    if id_usuario not in consumidores:
+
+        produtos.update_one(
+            {"_id": id_produto},
+            {"$push": {
+                "consumidores": id_usuario
+            }}
+        )
+
+def remover_consumidor_produto(id_produto, id_usuario):
+    id_produto = ObjectId(id_produto)
+    id_usuario = ObjectId(id_usuario)
+
+    consumidores = produtos.find_one({
+        "_id": id_produto
+    })["consumidores"]
+
+    if id_usuario in consumidores:
+
+        produtos.update_one(
+            {"_id": id_produto},
+            {"$pull": {
+                "consumidores": id_usuario
+            }}
+        )
+
+
+def adicionar_participante_compra(id_compra, id_paricipante):
+    id_compra = ObjectId(id_compra)
+    id_paricipante = ObjectId(id_paricipante)
+
+    compras.update_one(
+        {"_id": id_compra},
+        {"$push": {
+            "participantes": id_paricipante
+        }}
+    )
+
+def remover_participante_compra(id_compra, id_paricipante): 
+    id_compra = ObjectId(id_compra)
+    id_paricipante = ObjectId(id_paricipante)
+    
+    compras.update_one(
+        {"_id": id_compra},
+        {"$pull": 
+            {
+                "participantes": id_paricipante
+            }
+        }
+    )
+
+def remover_todos_participantes_compra(id_compra):
+    id_compra = ObjectId(id_compra)
+
+    compras.update_one(
+        {
+            "_id": id_compra
+        },
+        {
+            "$set": {
+                "participantes": []
+            }
+        }
+    )
+
+def calcular_pagamento_compra_usuario(id_compra, id_usuario):
+    id_compra = ObjectId(id_compra)
+    id_usuario = ObjectId(id_usuario)
+    
+    compra = encontrar_compra_pelo_id(id_compra)
+
+    total_usuario = 0
+
+    produtos = encontrar_produtos_por_compra(id_compra)
+    usuario = procurar_usuario_pelo_id(id_usuario)
+
+    if compra["pagador"] == usuario["_id"]:
+        return 0
+
+    for produto in produtos:
+        if usuario["_id"] in produto["consumidores"]:
+            total_usuario += produto["valor"] / len(produto["consumidores"])
+    
+    return total_usuario
