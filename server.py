@@ -1,7 +1,7 @@
 from flask import Flask, request
 from flask import render_template, make_response, redirect, url_for, send_file
 from datetime import datetime, timedelta
-from wtforms import FileField, Form, DateField, StringField, PasswordField, SearchField
+from wtforms import FileField, Form, DateField, StringField, PasswordField, SearchField, SelectField
 from mapper import *
 from flask_cors import CORS
 from database import (
@@ -17,6 +17,11 @@ from util import escrever_relatorio
 class RangeDateForm(Form):
     inicio = DateField("inicio", format="%Y-%m-%d")
     fim = DateField("fim", format="%Y-%m-%d")
+
+class FiltroComprasForm(Form):
+    inicio = DateField("inicio", format="%Y-%m-%d")
+    fim = DateField("fim", format="%Y-%m-%d")
+    ordem = SelectField(choices=["decrescente", "crescente"])
 
 class LoginForm(Form):
     usuario = StringField("usuario")
@@ -112,19 +117,22 @@ def logoff():
 def mostrar_compras():
     token = request.cookies["user_token"]
     user = encontrar_usuario_pelo_token(token)
-    ordem = request.args.get("ord")
 
-    form = RangeDateForm(request.args)
+    form = FiltroComprasForm(request.args)
+    
+    ordem = -1
 
-    if form.validate() and form.inicio.data and form.fim.data:
-        inicio = datetime.fromordinal(form.inicio.data.toordinal())
-        fim = datetime.fromordinal(form.fim.data.toordinal()) + timedelta(days=1)
+    if form.ordem:
+        ordem = 1 if form.ordem.data == "crescente" else -1
 
-        compras = compras_por_periodo(inicio, fim).sort("data", 1 if ordem == "asc" else -1)
-        valor = valor_total_por_periodo(inicio, fim)
-
+    if form.validate():        
+        if form.inicio.data and form.fim.data:
+            inicio = datetime.fromordinal(form.inicio.data.toordinal())
+            fim = datetime.fromordinal(form.fim.data.toordinal()) + timedelta(days=1)
+            compras = compras_por_periodo(inicio, fim).sort("data", ordem)
+            valor = valor_total_por_periodo(inicio, fim)
     else:
-        compras = compras_por_periodo().sort("data", 1 if ordem == "asc" else -1)
+        compras = compras_por_periodo().sort("data", ordem)
         valor = valor_total_por_periodo()
 
     compras = mapper_compras(compras)
@@ -138,7 +146,7 @@ def mostrar_compras_pendentes():
     token = request.cookies["user_token"]
     user = encontrar_usuario_pelo_token(token)
 
-    compras_pendentes = encontrar_compras_pendentes()
+    compras_pendentes = encontrar_compras_pendentes().sort('data', 1)
 
     compras_pendentes = mapper_compras(compras_pendentes) if compras_pendentes else None
 

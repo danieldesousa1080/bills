@@ -1,0 +1,13 @@
+.relatorio {
+    display: flex;
+    flex-direction: column;
+    border: 2px solid purple;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.relatorio .titulo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}

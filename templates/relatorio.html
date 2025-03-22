@@ -2,13 +2,25 @@
 
 {% block content_title %}Relatórios por período{% endblock %}
 
+{% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/relatorio.css') }}">
+{% endblock %}
+
+
 {% block content %}
   <h1>Aqui você encontrará relatórios gerados pelo administrador do sistema</h1>
   {% if relatorios %}
     {% for relatorio in relatorios %}
+    <div class="relatorio">
+      <div class="titulo">
+        <h2> {{ relatorio["nome"] }} </h2>
+        <span>({{ relatorio["inicio"].date().strftime('%d/%m/%Y') + ' à ' + relatorio["fim"].date().strftime('%d/%m/%Y') }})</span>
+      </div>
       <a href="{{ url_for('download_relatorio', id=relatorio['_id']) }}">
-        <h2>{{ relatorio["nome"] }}</h2>
+        Baixar Relatorio
       </a>
+    </div>
+      
     {% endfor %}
   {% else %}
     <h2>Infelizmente ainda não há relatórios disponíveis</h2>

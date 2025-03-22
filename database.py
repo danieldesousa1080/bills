@@ -92,7 +92,7 @@ def criar_compra(
                 "data": data,
                 "id_estabelecimento": id_estabelecimento,
                 "pagador": None,
-                "editavel": False,
+                "editavel": True,
                 "analizada": False
             }
         )
