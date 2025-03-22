@@ -12,6 +12,7 @@ from database import (
     validar_usuario,
     encontrar_usuario_pelo_token,
 )
+from util import escrever_relatorio
 
 class RangeDateForm(Form):
     inicio = DateField("inicio", format="%Y-%m-%d")
@@ -345,22 +346,32 @@ def finalizar_sessao():
     #finalizar_sessão_aberta()
     return redirect(url_for("sessoes"))
 
-@app.route("/admin/relatorios")
+@app.route("/admin/relatorios", methods=["GET","POST"])
 def gerar_relatorios():
-    
+
+    form = RelatorioForm()
+
     if request.method == "GET":
         token = request.cookies["user_token"]
         user = encontrar_usuario_pelo_token(token)
     
-        form = RelatorioForm()
-    
         return render_template("admin/gerar_relatorio.html", user=user, form=form)
+
     if request.method == "POST":
-        inicio = request.form.get("inicio")
-        fim = request.form.get("fim")
 
+        if form.validate() and form.inicio and form.fim and form.titulo:
+            inicio = request.form.get("inicio")
+            fim = request.form.get("fim")
+            titulo = request.form.get("titulo")
 
-        return {}
+            inicio = datetime.strptime(inicio, "%Y-%m-%d")
+            fim = datetime.strptime(fim, "%Y-%m-%d")
+
+            escrever_relatorio(inicio, fim)
+
+            return {"inicio": inicio, "fim": fim, "titulo": titulo}
+        else:
+            return redirect(request.url)
 
 @app.get("/compra/definir_analizada/<id>")
 def definir_compra_analizada(id):

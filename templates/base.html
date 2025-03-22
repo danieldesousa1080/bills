@@ -13,7 +13,7 @@
             <a href="{{url_for('mostrar_compras_pendentes')}}">Compras pendentes</a>
             <a href="{{url_for('mostrar_relatorios')}}">Relatórios</a>
             {% if user["admin"] %}
-                <a href="{{ url_for('admin_page') }}">Dashboard Admin</a>
+                <a class="dashboard-admin-link" href="{{ url_for('admin_page') }}">Dashboard Admin</a>
             {% endif %}
         </div>
         <div class="user">

@@ -14,7 +14,7 @@
         <button type="submit">Filtrar</button>
     </form>
     {% if ordem == "asc" %}
-          <a href={{url_for("mostrar_compras") + "?ord=desc"}}>
+          <a href={{url_for("mostrar_compras") + "?ord=desc" }}>
             <button>Ordem crescente</button>
           </a>
           {% else %}

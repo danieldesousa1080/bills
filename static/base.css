@@ -50,3 +50,7 @@ button {
 .user button:hover {
     background-color: rgb(138, 0, 0);
 }
+
+.dashboard-admin-link {
+    background-color: lightcoral!important;
+}
