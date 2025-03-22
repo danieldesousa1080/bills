@@ -3,7 +3,7 @@
 var produtos = document.querySelectorAll("#selecao-produto")
 
 btn_selecionar_tudo = document.querySelector("#selecionar-tudo")
-btn_desmarcar_todos_os_produtos = document.querySelector("#desmarcar-tudo")
+btn_desmarcar_todos_os_produtos = document.querySelector("#desmarcar-tudo") 
 btn_enviar = document.querySelector("#enviar")
 
 function selecionar_todos_os_produtos(valor_bool) {
@@ -46,7 +46,7 @@ function get_produtos_selecionados() {
 
 } 
 
-function enviar_produtos_selecionados(){
+async function enviar_produtos_selecionados(){
     let selecionados = []
     let nao_selecionados = []
 
@@ -60,7 +60,7 @@ function enviar_produtos_selecionados(){
         }
     )
 
-    fetch("/compra/produto/consumo", {
+    return fetch("/compra/produto/consumo", {
         method: "POST",
         body: JSON.stringify({
           selecionados: selecionados,
@@ -69,7 +69,5 @@ function enviar_produtos_selecionados(){
         headers: {
           "Content-type": "application/json; charset=UTF-8"
         }
-      }).then(data=> {
-        location.reload()
       })
 }

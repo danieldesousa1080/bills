@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content_title %}Compras Pendentes{% endblock %}
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/compras_pendentes.css') }}">
+{% endblock %}
+{% block content %}
+
+{% if compras %}
+<div class="compras-lista">
+    {% for compra in compras %}
+    <a href="{{ url_for('mostrar_compra', protocolo=compra['protocolo']) }}" class="compra">
+     <div class="compras-container" title="valor: R${{ compra['preco'] }}">
+     <div>
+             <h2>{{compra["data"]}}</h2>
+             <br> 
+             <h3>{{compra["estabelecimento"]["nome"]}}</h3>
+         </div> 
+         <br>
+         <h2>R${{compra["preco"]}}</h2>
+         <br>
+        <div class="compra_infos">
+            <p><b>Pagador: </b>{{ compra["pagador"] if compra["pagador"] else 'não identificado' }}</p>
+            <p><i>disponível para edição</i></p>
+        </div>
+
+     </div>
+    </a>
+    {% endfor %}
+ </div>
+{% else %}
+    <h1>Não existem compras pendentes no momento!</h1>
+{% endif %}
+
+{% endblock %}

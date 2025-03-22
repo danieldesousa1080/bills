@@ -1,18 +1,17 @@
 
 
 .links {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+  display: flex;
+  gap: 4px;
 }
 
 .links a {
-    margin: 0 auto;
     background-color: lightblue;
     text-decoration: none;
     color: black;
     cursor: pointer;
-    padding: 8px;
-    border-radius: 8px;
+    padding: 8px 10px;
+    border-radius: 2px 8px;
 }
 
 .links a:hover {

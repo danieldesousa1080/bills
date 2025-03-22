@@ -81,3 +81,38 @@ button {
 .btn-pgto-compra {
     background-color: hotpink;
 }
+
+.btn-recarregar {
+    position: fixed;
+    bottom: 16px;
+    right: 8px;
+    margin: none;
+    background-color: brown;
+    color: white;
+    width: 20%;
+    height: 80px;
+}
+
+.btns-marcadores {
+    margin-bottom: 20px;
+}
+
+.dialogo-remover-mudancas {
+    position: fixed;
+    width: 50vw;
+    height: 50vh;
+    border-radius: 40px;
+    background-color: rgb(255, 125, 125);
+    display: none;
+    flex-direction: column;
+    justify-content: space-around;
+}
+
+.dialogo-remover-mudancas .botoes {
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.dialog-open {
+    display: flex;
+}

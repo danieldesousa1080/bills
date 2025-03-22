@@ -20,7 +20,7 @@
 
 .compras-container {
     cursor: pointer;
-    background-color: rgb(255, 255, 255);
+    background-color: rgb(0, 57, 77);
     padding: 8px;
     border-radius: 10px;
     display: grid;
@@ -28,30 +28,18 @@
     justify-content: space-between;
     transition: 1s ease;
     margin: 0;
+    color: white;
 }
 
 .compras-container:hover {
-    background-color: rgb(172, 176, 255);
+    background-color: rgb(0, 40, 55);
 }
 
 button {
     cursor: pointer;
 }
 
-.editavel {
-    background-color: rgb(126, 0, 0);
-}
-
-.editavel:hover {
-    background-color: rgb(105, 0, 0);
-}
-
 .compra_infos {
     display: flex;
     gap: 20px;
-}
-
-.filtro-data {
- display: flex; 
- gap: 4px
 }

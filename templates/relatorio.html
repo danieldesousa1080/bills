@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content_title %}Relatórios por período{% endblock %}
+
+{% block content %}
+  <h1>Aqui você encontrará relatórios gerados pelo administrador do sistema</h1>
+  {% if relatorios %}
+  {% else %}
+    <h2>Infelizmente ainda não há relatórios disponíveis</h2>
+  {% endif %}
+{% endblock %}

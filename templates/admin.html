@@ -5,7 +5,10 @@
 {% block content %}
     <ul>
         <li><a href="{{url_for('sessoes')}}">Sessões</a></li>
-        <li><a href="">Imprimir Relatório</a></li>
-        <li><a href="">Habilitar Usuário</a></li>
+        <li>
+          <a href="{{ url_for('gerar_relatorios') }}">Gerar Relatório</a></li>
+        <li>
+          <a href="">Habilitar Usuário</a>
+        </li>
     </ul>
 {% endblock %}

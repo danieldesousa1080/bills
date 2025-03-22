@@ -5,17 +5,46 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/compra.css') }}">
 {% endblock %}
 {% block content %}
+
+{% if user["admin"] %}
+
+<dialog class="dialogo-remover-mudancas">
+    <div class="text">
+        <h1>Cuidado!</h1>
+        <p>Ao prosseguir com essa operação, todas as mudanças relativas a esta compra serão perdidas.</p>
+        <p>os dados <b>não</b> poderão ser recuperados posteriormente.</p>
+    </div>
+    <div class="botoes">
+        <a href="{{ url_for('remover_edicoes_compra', id=context['compra']['id']) }}"><button>Continuar</button></a>
+        <button onclick="fecharDialogoMudancas()">Retornar</button>
+    </div>
+</dialog>
+
+{% endif %}
+
+
+
+
 {% if context["compra"]["editavel"] %}
     <span>Modo de <i>edição</i></span>
+
+    {% if not context["compra"]["pagador"] %}
+        <p><b style="color: darkorchid;">Esta compra precisa de um pagador</b></p>
+    {% endif %}
+
+    {% if not context["compra"]["participantes"] %}
+        <p><b style="color: darkorchid;">Todos os itens precisam ter ao menos um consumidor</b></p>
+    {% endif %}
+
 {% else %}
     <span>Modo de <i>visualização</i></span>
 {% endif %}
 {% if context["compra"]["analizada"] %}
-    <h3>Esta compra já foi analizada</h3>
+    <p>Esta compra já foi analisada</p>
     <div>
         <b>Pagamentos:</b>
 
-        <div class=" consumidores">
+        <div class="consumidores">
             {% for participante in participantes %}
             {% if participante["usuario"] == context["usuario"] %}
                 <p class="consumidor usuario_consumidor"><b>Você paga: </b>R$ {{ '%0.2f'|format(pagamento_participantes[participante['usuario']])|float }}</p>
@@ -27,7 +56,7 @@
     </div>
     
 {% else %}
-    <h3>Esta compra ainda não foi analizada</h3>
+    <h4 >Esta compra ainda não foi analisada</h4 >
 {% endif %}
 
 {% if user["admin"] %}
@@ -35,18 +64,21 @@
 <h2>Modo administrador</h2>
 
 {% if context["compra"]["editavel"]  %}
-    <a href="{{ url_for('mudar_para_o_modo_de_visualizacao', protocolo=context['compra']['protocolo']) }}"><button class="mudar-modo">Mudar para o modo de visualização</button></a>
+    <a href="{{ url_for('mudar_para_o_modo_de_visualizacao', protocolo=context['compra']['protocolo']) }}">
+        <button class="mudar-modo">Mudar para o modo de visualização</button>
+    </a>
+    <a><button id="remover-edicoes" style="background-color: red; color: white;" onclick="abrirDialogoMudancas()">Remover todas as edições feitas nesta compra</button></a>
 {% elif not context["compra"]["analizada"]%}
     <a href="{{ url_for('mudar_para_o_modo_de_edicao', protocolo=context['compra']['protocolo']) }}"><button class="mudar-modo">Mudar para o modo de edição</button></a>
-{% endif %}
+    {% endif %}
     
     {% if context["compra"]["analizada"] %}
-        <a href="{{ url_for('definir_compra_nao_analizada', id=context["compra"]["id"]) }}"><button class="btn-analise">Definir compra como "Não analizada"</button></a>
-    {% else %}
-        <a href="{{ url_for('definir_compra_analizada', id=context["compra"]["id"]) }}"><button class="btn-analise">Definir compra como "Analizada"</button></a>
+        <a href="{{ url_for('definir_compra_nao_analizada', id=context["compra"]["id"]) }}"><button class="btn-analise">Definir compra como "Não analisada"</button></a>
+    {% elif habilitar_analise %}
+        <a href="{{ url_for('definir_compra_analizada', id=context["compra"]["id"]) }}"><button class="btn-analise">Definir compra como "Analisada"</button></a>
     {% endif %}
-    
-    {% endif %}
+    <br>
+{% endif %}
     <br>
     <a class="nome-empresa" href="{{ url_for('informacoes_empresa', id=context['compra']['estabelecimento']['id']) }}">
         {{ context["compra"]["estabelecimento"]["nome"] }}
@@ -55,23 +87,24 @@
 {% if user["admin"] %}
 <p><b>Protocolo: </b>{{ context["compra"]["protocolo"] }}</p>
 {% endif %}
-<p><b>Total:</b> R$ {{ context["compra"]["preco"] }}</p>
+<p><b>Valor Total:</b> R$ {{ context["compra"]["preco"] }}</p>
+<p><b>Total de itens:</b> {{ context["compra"]["total_itens"] }}</p>
 <p><b>Preço médio por produto: </b>R$ {{ '%0.2f'|format(context["compra"]["preco_por_produto"])|float }}</p>
-<p><b>Data:</b> {{ context["compra"]["data"] }}</p>
+<p><b>Data da compra:</b> {{ context["compra"]["data"] }}</p>
 {% if not context["compra"]["pagador"] %}
 {% if context["compra"]["editavel"] %}
-<a href="{{ url_for('pagar_compra', id=context['compra']['id']) }}"><button class="btn-pgto-compra">Eu paguei por isso!</button></a>
+<button onclick="location.reload()" class="btn-recarregar">Verificar mudanças</button>
+    <button onclick="pagar_compra(true).then(data => window.location.href = window.location.href)" class="btn-pgto-compra">Eu paguei por isso!</button>
 {% endif %}
 {% elif context["compra"]["pagador"] == context["usuario"] %}
-<p>Você registrou o pagamento dessa compra</p>
+<p style="color: darkred;"><b><i> Você registrou o pagamento dessa compra </i></b></p>
 {% if context["compra"]["editavel"] %}
-<a href="{{ url_for('remover_pgto_compra', id=context['compra']['id']) }}"><button class="btn-pgto-compra">Eu Não paguei por isso!</button></a>
+    <button onclick="pagar_compra(false).then( data => window.location.href = window.location.href)" class="btn-pgto-compra">Eu Não paguei por isso!</button>
 {% endif %}
 {% else %}
 <p><b>Pagador: </b> {{ context["compra"]["pagador"] }}</p>
 {% endif %}
-<a href=""><button>Recarregar página</button></a>
-
+<hr>
 {% if participantes %}
 <div>
     <p><i><b>Usuários que participam desta compra:</b></i></p>
@@ -85,28 +118,16 @@
         {% endfor %}
     </div>
 </div>
-
-{% else %}
-<p><i>Ninguém participou desta compra ainda</i></p>
+<hr>
 {% endif %}
+
 
 {% if context["compra"]["editavel"] %}
-
-{% if usuario_participou %}
-    <a href="{{ url_for('remover_participante', id_compra=context['compra']['id']) }}"><button>Remover participação da compra</button></a>
-{% else %}
-    <a href="{{ url_for('adicionar_participante', id_compra=context['compra']['id']) }}"><button>Eu participei desta compra</button></a>
-{% endif %}
-
-{% endif %}
-
-<br>
-<p><b>Itens:</b> {{ context["compra"]["total_itens"] }}</p>
-{% if context["compra"]["editavel"] %}
-<p>Selecione os produtos que você consumiu</p>
-
+<div class="btns-marcadores">
+    <p>Selecione os produtos que você consumiu</p>
     <button id="selecionar-tudo">Selecionar tudo</button>
     <button id="desmarcar-tudo">Não selecionar nada</button>
+</div>
 {% endif %}
 <div class="produtos-lista">
     {% for produto in context["produtos"] %}
@@ -115,7 +136,7 @@
                 {% if not context['compra']['editavel'] %}
                     disabled
                 {% endif %}
-                {% if context['usuario'] in produto['consumidores'] %}
+                {% if produto in produtos_consumidos %}
                     checked
                 {% endif %}
             >
@@ -156,7 +177,31 @@
 </div>
 
 {% if context["compra"]["editavel"] %}
-    <button class="enviar" id="enviar" onclick="enviar_produtos_selecionados()">Salvar minhas escolhas</button>
+    <button class="enviar" id="enviar" onclick="enviar_produtos_selecionados().then(data => window.location.reload())">Salvar minhas escolhas</button>
 {% endif %}
 <script src="{{ url_for('static', filename='scripts/compra.js') }}"></script>
+<script>
+
+    dialogo_mudancas = document.querySelector("dialog")
+    fecharDialogoMudancas()
+
+    function abrirDialogoMudancas(){
+        dialogo_mudancas.classList.add("dialog-open")
+    }
+
+    function fecharDialogoMudancas(){
+        dialogo_mudancas.classList.remove("dialog-open")
+    }
+
+    async function pagar_compra(escolha){
+
+        await enviar_produtos_selecionados().then( data => {
+            if(escolha){
+                return fetch("{{ url_for('pagar_compra', id=context['compra']['id']) }}")
+            } else {
+                return fetch("{{ url_for('remover_pgto_compra', id=context['compra']['id']) }}")
+            }
+        })
+    }
+</script>
 {% endblock %}

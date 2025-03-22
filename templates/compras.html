@@ -5,12 +5,24 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/compras.css') }}">
 {% endblock %}
 {% block content %}
+    
     <h3>Filtrar compras por período</h3>
+    <div class="filtro-data">
     <form action="{{ url_for('mostrar_compras') }}">
         {{ context["form"].inicio(class="formulario") }}
         {{ context["form"].fim(class="formulario") }}
         <button type="submit">Filtrar</button>
     </form>
+    {% if ordem == "asc" %}
+          <a href={{url_for("mostrar_compras") + "?ord=desc"}}>
+            <button>Ordem crescente</button>
+          </a>
+          {% else %}
+          <a href={{url_for("mostrar_compras") + "?ord=asc"}} >
+              <button>Ordem decrescente</button>
+            </a>
+    {% endif %}
+    </div>
     <div class="info">
         <h1>Compras realizadas entre os dias {{ context["compras"][-1]["data"]}} e {{context["compras"][0]["data"] }}</h1>
         <h3>Total do período: R$ {{'%0.2f'|format(context["valor_periodo"])|float}}</h3>
@@ -22,10 +34,10 @@
        <a href="{{ url_for('mostrar_compra', protocolo=compra['protocolo']) }}" class="compra">
         <div class="compras-container" title="valor: R${{ compra['preco'] }}"
         {% if compra["editavel"] and not compra["analizada"]%}
-            style="background-color: rgb(0, 125, 167); color: white;"
+            style="background-color: rgb(0, 57, 77); color: white;"
         {% endif %}
         {% if compra["analizada"] %} 
-            style="background-color: pink;"
+            style="background-color: rgb(126, 0, 0); color: white;"
         {% endif %}
         >
         <div>
@@ -38,7 +50,18 @@
             <div>
                 <h2>{{compra["total_itens"]}} itens</h2>
             </div>
-            <p><b>Pagador: </b>{{ compra["pagador"] if compra["pagador"] else 'não identificado' }}</p>
+            <div class="compra_infos">
+
+                {% if compra["editavel"] %}
+                <p><i>disponível para edição</i></p>
+                {% endif %}
+                {% if compra["analizada"] %}
+                    <p><b>pagador: </b>{{ compra["pagador"]}}</p>
+                    <p><i>compra analisada</i></p>
+                {% else %}
+                    <p><i>compra não analisada</i></p>
+                {% endif %}
+            </div>
         </div>
        </a>
        {% endfor %}

@@ -15,14 +15,13 @@ estabelecimentos = database["estabelecimentos"]
 produtos = database["produtos"]
 usuarios = database["usuarios"]
 sessoes = database["sessoes"]
-
+relatorios = database["relatorios"]
 
 def procurar_estabelecimento(inscricao) -> dict | None:
     """Procura um estabelecimento no banco de dados dado uma inscrição."""
     estabelecimento = estabelecimentos.find_one(
         {"inscricao": {"$eq": inscricao.strip()}}
     )
-    print(type(estabelecimento))
     exit()
     return estabelecimento
 
@@ -68,7 +67,8 @@ def encontrar_compra(protocolo) -> dict | None:
 
 
 def encontrar_compra_pelo_id(id):
-    id = ObjectId(id)
+    if type(id) == str:
+        id = ObjectId(id)
     return compras.find_one({"_id": {"$eq": id}})
 
 
@@ -89,12 +89,20 @@ def criar_compra(
                 "id_estabelecimento": id_estabelecimento,
                 "pagador": None,
                 "editavel": False,
-                "analizada": False,
-                "participantes": []
+                "analizada": False
             }
         )
         return compra
 
+def definir_participantes_compra(id_compra, ids_participantes):
+    id_compra = ObjectId(id_compra)
+
+    compras.update_one(
+        {"_id": id_compra},
+        {"$set":{
+            "participantes": ids_participantes
+        }}
+    )
 
 def criar_produto(
     nome: str, quantidade: float, unidade: str, valor: float, id_compra, codigo
@@ -108,7 +116,6 @@ def criar_produto(
             "id_compra": id_compra,
             "codigo": codigo,
             "pagador": None,
-            "consumidores": []
         }
     )
 
@@ -127,6 +134,14 @@ def procurar_produtos_por_nome(nome_do_produto: str) -> list[dict] | None:
     """Retorna uma lista de produtos dado um nome. Ou None, caso não econtre nenhum produto"""
     return produtos.find({"nome": {"$regex": nome_do_produto, "$options": "i"}})
 
+def produtos_consumidos_pelo_usuario(produtos, id_usuario):
+    id_usuario = ObjectId(id_usuario)
+    consumidos = []
+
+    for produto in produtos:
+        if id_usuario in produto["consumidores"]:
+            consumidos.append(produto)
+    return consumidos
 
 def procurar_estabelecimento(inscricao: str) -> dict | None:
     """Retorna um estabelecimento dada uma inscrição. Ou None caso não encontre"""
@@ -275,6 +290,7 @@ def finalizar_sessão_aberta():
         {
             "$set": {
                 "editavel": False,
+                "analizada": True
             }
         }
     )
@@ -302,18 +318,17 @@ def criar_nova_sessao(inicio: datetime.date, fim: datetime.date):
     )
 
 def finalizar_compra(id, valor: bool):
-    print(f"Fui chamado! id: {id} | valor: {valor}")
     return compras.update_one(
         {
             "_id": ObjectId(id)
         },
         {
             "$set": {
-                "analizada": valor,
-                "editavel": False
+                "analizada": valor
             }
         }
     )
+
 
 def adicionar_consumidor_produto(id_produto, id_usuario):
     '''Adiciona um consumidor na lista de consumidores do produto'''
@@ -389,6 +404,21 @@ def remover_todos_participantes_compra(id_compra):
         }
     )
 
+
+def criar_relatorio(nome:str, arquivo: str,inicio: datetime, fim: datetime):
+    return relatorios.insert_one(
+            {
+                "inicio": inicio,
+                "fim": fim,
+                "nome": nome,
+                "arquivo": arquivo
+            }
+    )
+
+def obter_relatorios():
+    return relatorios.find({})
+
+
 def calcular_pagamento_compra_usuario(id_compra, id_usuario):
     id_compra = ObjectId(id_compra)
     id_usuario = ObjectId(id_usuario)
@@ -408,3 +438,6 @@ def calcular_pagamento_compra_usuario(id_compra, id_usuario):
             total_usuario += produto["valor"] / len(produto["consumidores"])
     
     return total_usuario
+
+
+

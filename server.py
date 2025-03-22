@@ -1,10 +1,17 @@
 from flask import Flask, request
 from flask import render_template, make_response, redirect, url_for
 from datetime import datetime, timedelta
-from wtforms import Form, DateField, StringField, PasswordField, SearchField
+from wtforms import FileField, Form, DateField, StringField, PasswordField, SearchField
 from mapper import *
 from flask_cors import CORS
-
+from database import (
+    compras_por_periodo,
+    valor_total_por_periodo,
+    procurar_usuario,
+    criar_usuario,
+    validar_usuario,
+    encontrar_usuario_pelo_token,
+)
 
 class RangeDateForm(Form):
     inicio = DateField("inicio", format="%Y-%m-%d")
@@ -24,14 +31,10 @@ class AdminForm(Form):
     inicio = DateField("inicio", format="%Y-%m-%d")
     fim = DateField("fim", format="%Y-%m-%d")
 
-from database import (
-    compras_por_periodo,
-    valor_total_por_periodo,
-    procurar_usuario,
-    criar_usuario,
-    validar_usuario,
-    encontrar_usuario_pelo_token,
-)
+class RelatorioForm(Form):
+    inicio = DateField("inicio", format="%Y-%m-%d")
+    fim = DateField("fim", format="%Y-%m-%d")
+    titulo = StringField()
 
 app = Flask(__name__)
 app.secret_key = "abc123"
@@ -108,26 +111,37 @@ def logoff():
 def mostrar_compras():
     token = request.cookies["user_token"]
     user = encontrar_usuario_pelo_token(token)
+    ordem = request.args.get("ord")
 
     form = RangeDateForm(request.args)
 
     if form.validate() and form.inicio.data and form.fim.data:
         inicio = datetime.fromordinal(form.inicio.data.toordinal())
-        fim = datetime.fromordinal(form.fim.data.toordinal())
+        fim = datetime.fromordinal(form.fim.data.toordinal()) + timedelta(days=1)
 
-        compras = compras_por_periodo(inicio, fim).sort("data", -1)
+        compras = compras_por_periodo(inicio, fim).sort("data", 1 if ordem == "asc" else -1)
         valor = valor_total_por_periodo(inicio, fim)
 
     else:
-        compras = compras_por_periodo().sort("data", -1)
+        compras = compras_por_periodo().sort("data", 1 if ordem == "asc" else -1)
         valor = valor_total_por_periodo()
 
     compras = mapper_compras(compras)
 
     data = {"compras": compras, "valor_periodo": valor, "form": form}
 
-    return render_template("compras.html", context=data, user=user)
+    return render_template("compras.html", context=data, user=user, ordem=ordem)
 
+@app.get("/compras/pendentes")
+def mostrar_compras_pendentes():
+    token = request.cookies["user_token"]
+    user = encontrar_usuario_pelo_token(token)
+
+    compras_pendentes = encontrar_compras_pendentes()
+
+    compras_pendentes = mapper_compras(compras_pendentes) if compras_pendentes else None
+
+    return render_template("compras_pendentes.html", compras=compras_pendentes, user=user)
 
 @app.get("/compra/<protocolo>")
 def mostrar_compra(protocolo):
@@ -135,8 +149,28 @@ def mostrar_compra(protocolo):
     user = encontrar_usuario_pelo_token(token)
 
     compra = encontrar_compra(protocolo)
-    produtos = procurar_produtos_por_compra(compra["_id"])
-    participantes = compra["participantes"]
+    produtos = list(procurar_produtos_por_compra(compra["_id"]))
+    habilitar_analise = True
+
+    consumidores = []
+
+    if not compra["pagador"]:
+        habilitar_analise = False
+
+    for produto in produtos:
+        if not produto["consumidores"]:
+            habilitar_analise = False
+
+        for consumidor in produto["consumidores"]:
+            if consumidor not in consumidores:
+                consumidores.append(consumidor)
+    
+    print(consumidores)
+    
+    definir_participantes_compra(compra["_id"], consumidores)
+
+    participantes = consumidores
+
     usuario_participou = user["_id"] in participantes
 
     pagamento_participantes = {}
@@ -147,6 +181,7 @@ def mostrar_compra(protocolo):
 
     participantes = [procurar_usuario_pelo_id(usuario) for usuario in participantes]
 
+    produtos_consumidos = produtos_consumidos_pelo_usuario(produtos, user["_id"])
     produtos = mapper_produtos(produtos)
 
     data = {"compra": mapper_compra(compra), "produtos": produtos, "usuario": user["usuario"]}
@@ -157,7 +192,9 @@ def mostrar_compra(protocolo):
         user=user ,
         usuario_participou=usuario_participou, 
         participantes=participantes, 
-        pagamento_participantes=pagamento_participantes
+        pagamento_participantes=pagamento_participantes,
+        habilitar_analise=habilitar_analise,
+        produtos_consumidos=mapper_produtos(produtos_consumidos)
     )
 
 @app.get("/compra/<protocolo>/modo/Consumidoresedicao")
@@ -247,6 +284,15 @@ def remover_pgto_compra(id):
         return redirect(url_for('mostrar_compra', protocolo=compra["protocolo"]))
     return redirect("/")
 
+@app.get("/remover_edicoes_compra/<id>")
+def remover_edicoes_compra(id):
+
+    compra = encontrar_compra_pelo_id(id)
+
+    remover_todas_edicoes_compra(id)
+
+    return redirect(url_for('mostrar_compra', protocolo=compra["protocolo"]))
+
 @app.get("/produto/registrar_pagamento/<protocolo_compra>/<id>")
 def adicionar_pgto_produto(protocolo_compra, id):
     token = request.cookies["user_token"]
@@ -289,9 +335,6 @@ def sessoes():
     if request.method == "POST":
         inicio = datetime.strptime(request.form["inicio"], "%Y-%m-%d")
         fim = datetime.strptime(request.form["fim"], "%Y-%m-%d") + timedelta(days=1)
-            
-        print(inicio)
-        print(fim)
 
         criar_nova_sessao(inicio, fim)
 
@@ -299,29 +342,25 @@ def sessoes():
 
 @app.get("/admin/sessao/finalizar")
 def finalizar_sessao():
-    finalizar_sessão_aberta()
+    #finalizar_sessão_aberta()
     return redirect(url_for("sessoes"))
 
-@app.get("/compra/adicionar_participante/<id_compra>")
-def adicionar_participante(id_compra):
-    token = request.cookies["user_token"]
-    user = encontrar_usuario_pelo_token(token)
-    compra = encontrar_compra_pelo_id(id_compra)
+@app.route("/admin/relatorios")
+def gerar_relatorios():
+    
+    if request.method == "GET":
+        token = request.cookies["user_token"]
+        user = encontrar_usuario_pelo_token(token)
+    
+        form = RelatorioForm()
+    
+        return render_template("admin/gerar_relatorio.html", user=user, form=form)
+    if request.method == "POST":
+        inicio = request.form.get("inicio")
+        fim = request.form.get("fim")
 
-    adicionar_participante_compra(id_compra, user["_id"])
 
-    return redirect(url_for("mostrar_compra", protocolo=compra["protocolo"]))
-
-@app.get("/compra/remover_participante/<id_compra>")
-def remover_participante(id_compra):
-    token = request.cookies["user_token"]
-    user = encontrar_usuario_pelo_token(token)
-    compra = encontrar_compra_pelo_id(id_compra)
-
-    remover_participante_compra(id_compra, user["_id"])
-
-    return redirect(url_for("mostrar_compra", protocolo=compra["protocolo"]))
-
+        return {}
 
 @app.get("/compra/definir_analizada/<id>")
 def definir_compra_analizada(id):
@@ -353,6 +392,14 @@ def definir_compra_nao_analizada(id):
     finalizar_compra(id, False)
 
     return redirect(url_for('mostrar_compra', protocolo=compra["protocolo"]))
+
+@app.get("/relatorios")
+def mostrar_relatorios():
+    token = request.cookies["user_token"]
+    user = encontrar_usuario_pelo_token(token)
+
+
+    return render_template("relatorio.html", user=user)
 
 
 if __name__ == "__main__":
