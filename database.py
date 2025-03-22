@@ -71,6 +71,10 @@ def encontrar_compra_pelo_id(id):
         id = ObjectId(id)
     return compras.find_one({"_id": {"$eq": id}})
 
+def encontrar_compras_pendentes():
+    return compras.find({
+        "editavel": True
+    })
 
 def criar_compra(
     protocolo, total_itens, preco, pagamento, data, id_estabelecimento
