@@ -5,6 +5,11 @@
 {% block content %}
   <h1>Aqui você encontrará relatórios gerados pelo administrador do sistema</h1>
   {% if relatorios %}
+    {% for relatorio in relatorios %}
+      <a href="{{ url_for('download_relatorio', id=relatorio['_id']) }}">
+        <h2>{{ relatorio["nome"] }}</h2>
+      </a>
+    {% endfor %}
   {% else %}
     <h2>Infelizmente ainda não há relatórios disponíveis</h2>
   {% endif %}

@@ -1,6 +1,8 @@
 import database as db
 import csv
 from datetime import datetime
+from pathlib import Path
+from uuid import uuid4
 
 def preco_medio_produtos(produtos: list[dict]):
     """Recebe uma lista de produtos e retorna o preço médio dela"""
@@ -51,17 +53,27 @@ def valores_compras_por_usuario(inicio: datetime, fim: datetime):
     return dicionario_despesas
 
 def escrever_relatorio(inicio, fim):
-    """escreve o relatorio em um arquivo e cria a referência no banco de dados"""
+    """escreve o relatorio em um arquivo e retorna o caminho para o arquivo"""
     dividas = valores_compras_por_usuario(inicio, fim)
-    texto = ""
+
+    inicio_txt = inicio.strftime('%d/%m/%Y')
+    fim_txt = fim.strftime('%d/%m/%Y')
+    texto = f"Relatório de referência {inicio_txt} à {fim_txt}\n"
+    texto += "==================================\n"
 
     for devedor, conta in dividas.items():
         for recebedor, valor in conta.items():
             texto += f"{str(devedor).capitalize()} deve pagar R$ {valor:.2f} para {str(recebedor).capitalize()}\n"
     
-    print(texto)
+    texto+="=================================================\n"
+    texto += "Favor conferir as compras referentes a esse período."
 
-    return texto
+    arquivo = Path("relatorios") / f"{str(uuid4())}.txt"
+
+    with open(arquivo, "w") as file:
+        file.writelines(texto)
+    
+    return arquivo
     
 if __name__ == "__main__":
     inicio = datetime.strptime("01/02/2025","%d/%m/%Y")

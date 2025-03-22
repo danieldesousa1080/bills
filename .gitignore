@@ -5,3 +5,4 @@ todo.md
 *.db
 *.dump
 backup_mongo.sh
+relatorios/*

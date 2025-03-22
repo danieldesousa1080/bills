@@ -420,8 +420,18 @@ def criar_relatorio(nome:str, arquivo: str,inicio: datetime, fim: datetime):
     )
 
 def obter_relatorios():
-    return relatorios.find({})
+    encontrados = relatorios.find({})
 
+    return list(encontrados)
+
+def encontrar_relatorio_pelo_id(id):
+    id = ObjectId(id)
+
+    relatorio =  relatorios.find_one(
+        {"_id": id}
+    )
+
+    return relatorio
 
 def calcular_pagamento_compra_usuario(id_compra, id_usuario):
     id_compra = ObjectId(id_compra)

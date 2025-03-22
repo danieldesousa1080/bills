@@ -1,5 +1,5 @@
 from flask import Flask, request
-from flask import render_template, make_response, redirect, url_for
+from flask import render_template, make_response, redirect, url_for, send_file
 from datetime import datetime, timedelta
 from wtforms import FileField, Form, DateField, StringField, PasswordField, SearchField
 from mapper import *
@@ -367,9 +367,13 @@ def gerar_relatorios():
             inicio = datetime.strptime(inicio, "%Y-%m-%d")
             fim = datetime.strptime(fim, "%Y-%m-%d")
 
-            escrever_relatorio(inicio, fim)
+            arquivo = str(escrever_relatorio(inicio, fim).relative_to("."))
+            criar_relatorio(titulo, arquivo, inicio, fim)
 
-            return {"inicio": inicio, "fim": fim, "titulo": titulo}
+            return {
+                "message": "relatorio criado!",
+                "arquivo": arquivo
+            }
         else:
             return redirect(request.url)
 
@@ -409,9 +413,16 @@ def mostrar_relatorios():
     token = request.cookies["user_token"]
     user = encontrar_usuario_pelo_token(token)
 
+    relatorios = obter_relatorios()
 
-    return render_template("relatorio.html", user=user)
+    return render_template("relatorio.html", user=user, relatorios=relatorios)
 
+@app.get("/relatorio/download/<id>")
+def download_relatorio(id):
+
+    relatorio = encontrar_relatorio_pelo_id(id)
+
+    return send_file(relatorio["arquivo"], as_attachment=True, download_name=str(relatorio['nome']+'.txt'))
 
 if __name__ == "__main__":
     app.run("0.0.0.0")
