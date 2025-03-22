@@ -1,6 +1,6 @@
 import database as db
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
 
@@ -29,6 +29,8 @@ def valores_compras_por_usuario(inicio: datetime, fim: datetime):
 
     """
 
+    fim += timedelta(days=1)
+
     dicionario_despesas = {}
 
     compras = db.compras_por_periodo(inicio, fim)
@@ -42,7 +44,7 @@ def valores_compras_por_usuario(inicio: datetime, fim: datetime):
                 usuario = usuario["usuario"]
                 valor = db.calcular_pagamento_compra_usuario(compra["_id"], participante_id)
                 if valor > 0:
-                    # print(f" [{compra['data'].date()}] {usuario} deve pagar R$ {valor :.2f} para {pagador} referente à compra {compra['protocolo']}")
+                    print(f" [{compra['data'].date()}] {usuario} deve pagar R$ {valor :.2f} para {pagador} referente à compra {compra['protocolo']}")
                     if dicionario_despesas.get(usuario):
                         if dicionario_despesas.get(usuario).get(pagador):
                             dicionario_despesas[usuario][pagador] += valor
@@ -79,4 +81,4 @@ if __name__ == "__main__":
     inicio = datetime.strptime("01/02/2025","%d/%m/%Y")
     fim = datetime.strptime("28/02/2025","%d/%m/%Y")
 
-    escrever_relatorio(inicio=inicio, fim=fim)
+    valores_compras_por_usuario(inicio, fim)
