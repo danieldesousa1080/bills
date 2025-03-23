@@ -12,7 +12,7 @@ from database import (
     validar_usuario,
     encontrar_usuario_pelo_token,
 )
-from util import escrever_relatorio
+from util import escrever_relatorio, remover_relatorio
 
 class RangeDateForm(Form):
     inicio = DateField("inicio", format="%Y-%m-%d")
@@ -375,13 +375,14 @@ def gerar_relatorios():
             inicio = datetime.strptime(inicio, "%Y-%m-%d")
             fim = datetime.strptime(fim, "%Y-%m-%d")
 
-            arquivo = str(escrever_relatorio(inicio, fim).relative_to("."))
-            criar_relatorio(titulo, arquivo, inicio, fim)
+            relatorio = escrever_relatorio(inicio, fim)
 
-            return {
-                "message": "relatorio criado!",
-                "arquivo": arquivo
-            }
+            if relatorio:
+                arquivo = str(relatorio.relative_to("."))
+                criar_relatorio(titulo, arquivo, inicio, fim)
+
+                return redirect(url_for('mostrar_relatorios'))
+            return redirect(request.url)
         else:
             return redirect(request.url)
 
@@ -427,10 +428,15 @@ def mostrar_relatorios():
 
 @app.get("/relatorio/download/<id>")
 def download_relatorio(id):
-
+    
     relatorio = encontrar_relatorio_pelo_id(id)
 
     return send_file(relatorio["arquivo"], as_attachment=True, download_name=str(relatorio['nome']+'.txt'))
+
+@app.get("/relatorios/excluir/<id>")
+def excluir_relatorio(id):
+    remover_relatorio(id)
+    return redirect(url_for("mostrar_relatorios"))
 
 if __name__ == "__main__":
     app.run("0.0.0.0")

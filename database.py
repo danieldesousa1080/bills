@@ -16,6 +16,7 @@ produtos = database["produtos"]
 usuarios = database["usuarios"]
 sessoes = database["sessoes"]
 relatorios = database["relatorios"]
+categorias = database["categorias"]
 
 def procurar_estabelecimento(inscricao) -> dict | None:
     """Procura um estabelecimento no banco de dados dado uma inscrição."""
@@ -93,7 +94,8 @@ def criar_compra(
                 "id_estabelecimento": id_estabelecimento,
                 "pagador": None,
                 "editavel": True,
-                "analizada": False
+                "analizada": False,
+                "participantes": []
             }
         )
         return compra
@@ -119,7 +121,7 @@ def criar_produto(
             "valor": valor,
             "id_compra": id_compra,
             "codigo": codigo,
-            "pagador": None,
+            "consumidores":[]
         }
     )
 
@@ -425,12 +427,10 @@ def obter_relatorios():
     return list(encontrados)
 
 def encontrar_relatorio_pelo_id(id):
-    id = ObjectId(id)
-
     relatorio =  relatorios.find_one(
-        {"_id": id}
+        {"_id": ObjectId(id)}
     )
-
+    
     return relatorio
 
 def calcular_pagamento_compra_usuario(id_compra, id_usuario):
@@ -443,15 +443,50 @@ def calcular_pagamento_compra_usuario(id_compra, id_usuario):
 
     produtos = encontrar_produtos_por_compra(id_compra)
     usuario = procurar_usuario_pelo_id(id_usuario)
-
-    if compra["pagador"] == usuario["_id"]:
-        return 0
-
+    
     for produto in produtos:
         if usuario["_id"] in produto["consumidores"]:
             total_usuario += produto["valor"] / len(produto["consumidores"])
     
     return total_usuario
 
+def criar_categoria(nome):
+    """ Insere uma nova categoria no banco """
+    categorias.insert_one({
+        "nome": nome,
+        "produtos": []
+    })
 
+def procurar_categoria_pelo_id(id):
+    """Procura uma categoria no banco pelo id"""
+    return categorias.find_one({
+        "_id": ObjectId(id)
+    })
 
+def procurar_categorias_pelo_nome(nome):
+    """Encontra categorias que se parecem com o nome"""
+    return categorias.find({
+        "nome": {"$regex": nome, "$options": "i"}
+    })
+
+def adicionar_produto_na_categoria(id_categoria, codigo_produto):
+    return categorias.update_one({
+        "_id": ObjectId(id_categoria)
+        },
+        {
+            "$push": {
+                "produtos": codigo_produto
+            }
+        }
+    )
+
+def remover_produto_da_categoria(id_categoria, codigo_produto):
+    return categorias.update_one({
+        "_id": ObjectId(id_categoria)
+        },
+        {
+            "$pull": {
+                "produtos": codigo_produto
+            }
+        }
+    )

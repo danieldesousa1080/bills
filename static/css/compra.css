@@ -2,6 +2,10 @@ button {
     font-weight: bold;
 }
 
+strike {
+    text-decoration: line-through 2px wheat;
+}
+
 .produtos-lista {
     display: flex;
     flex-direction: column;

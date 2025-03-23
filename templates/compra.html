@@ -47,9 +47,27 @@
         <div class="consumidores">
             {% for participante in participantes %}
             {% if participante["usuario"] == context["usuario"] %}
-                <p class="consumidor usuario_consumidor"><b>Você paga: </b>R$ {{ '%0.2f'|format(pagamento_participantes[participante['usuario']])|float }}</p>
+                {% if participante["usuario"] == context['compra']['pagador']%}
+                <strike>
+                    <p class="consumidor usuario_consumidor">
+                        <b>Você paga: </b>
+                        R$ {{ '%0.2f'|format(pagamento_participantes[participante['usuario']])|float }}
+                    </p>
+                </strike>
+                {% else %}
+                    <p class="consumidor usuario_consumidor">
+                        <b>Você paga: </b>
+                        R$ {{ '%0.2f'|format(pagamento_participantes[participante['usuario']])|float }}
+                    </p>    
+                {% endif %}
             {% else %}
-                <p class="consumidor"><b>{{ participante["usuario"] }} paga: </b>R$ {{ '%0.2f'|format(pagamento_participantes[participante['usuario']])|float }}</p>
+                {% if participante["usuario"] == context['compra']['pagador']%}
+                    <strike>    
+                        <p class="consumidor"><b>{{ participante["usuario"] }} paga: </b>R$ {{ '%0.2f'|format(pagamento_participantes[participante['usuario']])|float }}</p>
+                    </strike>
+                {% else %}
+                    <p class="consumidor"><b>{{ participante["usuario"] }} paga: </b>R$ {{ '%0.2f'|format(pagamento_participantes[participante['usuario']])|float }}</p>
+                {% endif %}
             {% endif %}
         {% endfor %}
         </div>

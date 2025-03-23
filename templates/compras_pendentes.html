@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block content_title %}Compras Pendentes{% endblock %}
+{% block content_title %}Compras Pendentes ({{compras|length}}) {% endblock %}
 {% block head %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/compras_pendentes.css') }}">
 {% endblock %}
@@ -17,7 +17,7 @@
              <h3>{{compra["estabelecimento"]["nome"]}}</h3>
          </div> 
          <br>
-         <h2>R${{compra["preco"]}}</h2>
+         <h2>R$ {{ '%0.2f'|format(compra["preco"])|float }}</h2>
          <br>
         <div class="compra_infos">
             <p><b>Pagador: </b>{{ compra["pagador"] if compra["pagador"] else 'não identificado' }}</p>

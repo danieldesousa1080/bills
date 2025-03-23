@@ -3,6 +3,8 @@ import csv
 from datetime import datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
+from database import ObjectId
+import os
 
 def preco_medio_produtos(produtos: list[dict]):
     """Recebe uma lista de produtos e retorna o preço médio dela"""
@@ -43,7 +45,7 @@ def valores_compras_por_usuario(inicio: datetime, fim: datetime):
                 usuario = db.procurar_usuario_pelo_id(participante_id)
                 usuario = usuario["usuario"]
                 valor = db.calcular_pagamento_compra_usuario(compra["_id"], participante_id)
-                if valor > 0:
+                if valor > 0 and usuario != pagador:
                     print(f" [{compra['data'].date()}] {usuario} deve pagar R$ {valor :.2f} para {pagador} referente à compra {compra['protocolo']}")
                     if dicionario_despesas.get(usuario):
                         if dicionario_despesas.get(usuario).get(pagador):
@@ -57,6 +59,9 @@ def valores_compras_por_usuario(inicio: datetime, fim: datetime):
 def escrever_relatorio(inicio, fim):
     """escreve o relatorio em um arquivo e retorna o caminho para o arquivo"""
     dividas = valores_compras_por_usuario(inicio, fim)
+
+    if not dividas:
+        return None
 
     inicio_txt = inicio.strftime('%d/%m/%Y')
     fim_txt = fim.strftime('%d/%m/%Y')
@@ -77,8 +82,15 @@ def escrever_relatorio(inicio, fim):
     
     return arquivo
     
-if __name__ == "__main__":
-    inicio = datetime.strptime("01/02/2025","%d/%m/%Y")
-    fim = datetime.strptime("28/02/2025","%d/%m/%Y")
+def remover_relatorio(id):
+    relatorio = db.relatorios.find_one(
+        {"_id": ObjectId(id)}
+    )
 
-    valores_compras_por_usuario(inicio, fim)
+    arquivo = Path(relatorio['arquivo'])
+    
+    os.remove(arquivo)
+
+    db.relatorios.delete_one(
+        {"_id": ObjectId(id)}
+    )

@@ -39,7 +39,7 @@
                 <h3>{{compra["estabelecimento"]["nome"]}}</h3>
             </div> 
             <br>
-            <h2>R${{compra["preco"]}}</h2>
+            <h2>R$ {{ '%0.2f'|format(compra["preco"])|float }}</h2>
             <div>
                 <h2>{{compra["total_itens"]}} itens</h2>
             </div>

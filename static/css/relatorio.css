@@ -1,13 +1,25 @@
 .relatorio {
     display: flex;
     flex-direction: column;
-    border: 2px solid purple;
+    background-color: rgb(85, 0, 85);
+    color: white;
     border-radius: 8px;
     padding: 20px;
+}
+
+.relatorio a {
+    color: white;
 }
 
 .relatorio .titulo {
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.relatorios {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
 }

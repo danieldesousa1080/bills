@@ -61,7 +61,6 @@ def mapper_produtos(produtos: list[dict]) -> dict:
                     "quantidade": produto["quantidade"],
                     "preco_real": produto["valor"] / produto["quantidade"],
                     "compra": compra,
-                    "pagador": procurar_usuario_pelo_id(produto["pagador"])['usuario'] if produto["pagador"] else None,
                     "consumidores": [procurar_usuario_pelo_id(consumidor)["usuario"] for consumidor in produto["consumidores"]]
                 }
             )

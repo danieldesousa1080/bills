@@ -4,25 +4,94 @@
 
 {% block head %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/relatorio.css') }}">
+  <style>
+    .dialogo-excluir-relatorio {
+      display: none;
+      width: 60%;
+      height: 60%;
+      flex-direction: column;
+      border: 0.5px solid purple;
+      border-radius: 8px;
+    }
+    .btn-excluir-relatorio {
+      background-color: red;
+      color: white;
+    }
+    .dialogo-ativo {
+      display: flex;
+      position: fixed;
+    }
+
+    .btn-confirmar-exclusao-relatorio {
+      background-color: red;
+      color: white;
+    }
+
+  </style>
 {% endblock %}
 
 
 {% block content %}
+
+  {% if user['admin'] %}
+    <dialog class="dialogo-excluir-relatorio">
+      <h1>Tem certeza que deseja excluir o relatório?</h1>
+      <p>A operação não poderá ser desfeita!</p>
+      <div class="botoes-excluir-relatorio">
+        <button class="btn-cancelar-exclusao-relatorio" onclick="cancelarExclusaoRelatorio()">cancelar</button>
+        <button class="btn-confirmar-exclusao-relatorio" onclick="confirmarExclusaoRelatorio()">excluir</button>
+      </div>
+    </dialog>
+  {% endif %}
+
   <h1>Aqui você encontrará relatórios gerados pelo administrador do sistema</h1>
   {% if relatorios %}
+
+  <div class="relatorios">
     {% for relatorio in relatorios %}
     <div class="relatorio">
       <div class="titulo">
         <h2> {{ relatorio["nome"] }} </h2>
         <span>({{ relatorio["inicio"].date().strftime('%d/%m/%Y') + ' à ' + relatorio["fim"].date().strftime('%d/%m/%Y') }})</span>
+        {% if user['admin'] %}
+          <button class="btn-excluir-relatorio" onclick="excluirRelatorio(`{{ relatorio['_id'] }}`)">excluir</button>
+        {% endif %}
       </div>
       <a href="{{ url_for('download_relatorio', id=relatorio['_id']) }}">
         Baixar Relatorio
       </a>
     </div>
-      
     {% endfor %}
+  </div>
   {% else %}
     <h2>Infelizmente ainda não há relatórios disponíveis</h2>
   {% endif %}
+
+    <script>
+      btnExcluirRelatorio = document.querySelectorAll(".btn-excluir-relatorio")
+      dialogoExcluirRelatorio = document.querySelector(".dialogo-excluir-relatorio")
+
+      var relatorioId;
+
+      btnExcluirRelatorio.forEach(
+          btn => btn.addEventListener('click', ev => {
+          dialogoExcluirRelatorio.classList.add('dialogo-ativo')
+        }
+      ))
+
+      function excluirRelatorio(id){
+        relatorioId = id;
+      }
+
+      function confirmarExclusaoRelatorio(){
+        console.log(relatorioId)
+
+        window.location.href = "{{ url_for('excluir_relatorio', id='') }}" + '/' + relatorioId
+      }
+
+      function cancelarExclusaoRelatorio() {
+        dialogoExcluirRelatorio.classList.remove('dialogo-ativo')
+      }
+    </script>
+
 {% endblock %}
