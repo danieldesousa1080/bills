@@ -10,7 +10,7 @@ from database import (
     procurar_usuario,
     criar_usuario,
     validar_usuario,
-    encontrar_usuario_pelo_token,
+    encontrar_usuario_pelo_token
 )
 from util import escrever_relatorio, remover_relatorio
 

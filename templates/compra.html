@@ -109,11 +109,11 @@
 <p><b>Total de itens:</b> {{ context["compra"]["total_itens"] }}</p>
 <p><b>Preço médio por produto: </b>R$ {{ '%0.2f'|format(context["compra"]["preco_por_produto"])|float }}</p>
 <p><b>Data da compra:</b> {{ context["compra"]["data"] }}</p>
-{% if not context["compra"]["pagador"] %}
 {% if context["compra"]["editavel"] %}
 <button onclick="location.reload()" class="btn-recarregar">Verificar mudanças</button>
     <button onclick="pagar_compra(true).then(data => window.location.href = window.location.href)" class="btn-pgto-compra">Eu paguei por isso!</button>
 {% endif %}
+{% if not context["compra"]["pagador"] %}
 {% elif context["compra"]["pagador"] == context["usuario"] %}
 <p style="color: darkred;"><b><i> Você registrou o pagamento dessa compra </i></b></p>
 {% if context["compra"]["editavel"] %}
